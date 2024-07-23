@@ -1,3 +1,10 @@
+mod plot;
+
+use bevy::app::App;
+use plot::add_plot;
+
 fn main() {
-    println!("Hello, world!");
+    let app = &mut App::new();
+    add_plot(app);
+    app.run();
 }
