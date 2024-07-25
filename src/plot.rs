@@ -124,11 +124,6 @@ fn generate_points<F>(range_start: i32, range_end: i32, step: f32, function: F) 
 where
     F: Fn(f32) -> f32,
 {
-    // let scaling = 20.0;
-    let scaling = 1.0;
-    let x_scaling = scaling;
-    let y_scaling = scaling;
-
     let mut points = vec![];
     let mut value = range_start as f32;
     while value < range_end as f32 {
