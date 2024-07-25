@@ -52,7 +52,11 @@ fn wave_for_n(x: f32, n: i32) -> f32 {
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
-            scale: 0.02,
+            scale: 0.005,
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(1.0, 0.0, 0.0),
             ..default()
         },
         ..default()
@@ -177,7 +181,7 @@ fn setup_axes(mut gizmos: Gizmos) {
 fn setup_ticks(mut gizmos: Gizmos) {
     // for now hardcoded
     let domain_points = generate_points(-10, 10, 1.0, |x| x);
-    let line_height = 0.5;
+    let line_height = 0.1;
     let half_line_height = line_height / 2.0;
     for point in domain_points {
         gizmos.line_2d(
