@@ -3,7 +3,6 @@ use bevy::{color::palettes::css::WHITE, prelude::*};
 pub fn add_plot(app: &mut App) {
     app.add_plugins(DefaultPlugins)
         .add_systems(Startup, (setup_camera, setup_light, setup))
-        // .add_systems(Update, draw_debug)
         .add_systems(Update, draw_curve);
 }
 
@@ -33,27 +32,6 @@ fn setup(mut commands: Commands) {
     commands.spawn(Curve(bezier));
 }
 
-// fn draw_debug(mut gizmos: Gizmos) {
-//     let points = generate_points(-10, 10, 0.02, |x| x * x);
-//     // let points = vec![
-//     //     vec3(-6., 2., 0.),
-//     //     vec3(6., 4., 0.),
-//     //     vec3(12., -2., 0.),
-//     //     vec3(14., 0., 0.),
-//     //     // vec3(12., 2., 0.),
-//     // ];
-
-//     for point in points {
-//         gizmos.circle(point, Dir3::Z, 0.01, YELLOW);
-//     }
-
-//     // let bezier_points = generate_path(&points, 0.2, 0.2);
-//     // for point in bezier_points {
-//     //     for p in point {
-//     //         gizmos.circle(p, Dir3::Z, 0.1, YELLOW);
-//     //     }
-//     // }
-// }
 
 // https://github.com/ivnsch/SwiftCharts/blob/c354c1945bb35a1f01b665b22474f6db28cba4a2/SwiftCharts/Views/CubicLinePathGenerator
 fn generate_path(points: &[Vec3], tension1: f32, tension2: f32) -> Vec<[Vec3; 4]> {
