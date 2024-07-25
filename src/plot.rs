@@ -130,12 +130,10 @@ fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     }
 }
 
-fn generate_points(
-    range_start: i32,
-    range_end: i32,
-    step: f32,
-    function: fn(f32) -> f32,
-) -> Vec<Vec3> {
+fn generate_points<F>(range_start: i32, range_end: i32, step: f32, function: F) -> Vec<Vec3>
+where
+    F: Fn(f32) -> f32,
+{
     let mut points = vec![];
     let mut value = range_start as f32;
     while value < range_end as f32 {
