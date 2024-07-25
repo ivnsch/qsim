@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::{
-    color::palettes::css::{GREEN, WHITE},
+    color::palettes::css::{GRAY, GREEN, WHITE},
     prelude::*,
 };
 
@@ -11,6 +11,7 @@ pub fn add_plot(app: &mut App) {
         .add_systems(Startup, setup)
         .add_systems(Update, setup_axes)
         .add_systems(Update, setup_ticks)
+        .add_systems(Update, setup_vertical_dashed_line)
         .add_systems(Update, draw_curve);
 }
 
@@ -164,6 +165,23 @@ fn setup_ticks(mut gizmos: Gizmos) {
                 y: half_line_height,
             },
             GREEN,
+        );
+    }
+}
+
+fn setup_vertical_dashed_line(mut gizmos: Gizmos) {
+    let x = 1.0;
+    // for now hardcoded
+    for y_start in -10..10 {
+        let y_start = y_start as f32;
+
+        gizmos.line_2d(
+            Vec2 { x, y: y_start },
+            Vec2 {
+                x,
+                y: y_start + 0.5,
+            },
+            GRAY,
         );
     }
 }
