@@ -16,7 +16,7 @@ pub fn add_plot(app: &mut App) {
 }
 
 fn setup(mut commands: Commands) {
-    let l: f32 = 1.0;
+    let l: f32 = 2.0;
     let n: f32 = 1.0;
     let domain_points = generate_points(-10, 10, 0.02, |x| {
         (2.0 / l).sqrt() * ((n * PI * x) / l).sin()
@@ -170,7 +170,7 @@ fn setup_ticks(mut gizmos: Gizmos) {
 }
 
 fn setup_vertical_dashed_line(mut gizmos: Gizmos) {
-    let x = 1.0;
+    let x = 2.0;
     // for now hardcoded
     for y_start in -10..10 {
         let y_start = y_start as f32;
