@@ -8,23 +8,39 @@ use bevy::{
 pub fn add_plot(app: &mut App) {
     app.add_plugins(DefaultPlugins)
         .add_systems(Startup, (setup_camera, setup_light))
-        .add_systems(Startup, setup)
+        .add_systems(Startup, setup_wave)
+        .add_systems(Startup, setup_pdf)
         .add_systems(Update, setup_axes)
         .add_systems(Update, setup_ticks)
         .add_systems(Update, setup_vertical_dashed_line)
         .add_systems(Update, draw_curve);
 }
 
-fn setup(mut commands: Commands) {
-    let l: f32 = 2.0;
-    let n: f32 = 1.0;
-    let domain_points = generate_points(-10, 10, 0.02, |x| {
-        (2.0 / l).sqrt() * ((n * PI * x) / l).sin()
-    });
+fn setup_wave(commands: Commands) {
+    setup_curve(commands, |x| wave(x));
+}
 
+fn setup_pdf(commands: Commands) {
+    setup_curve(commands, |x| wave(x).powi(2));
+}
+
+fn setup_curve<F>(mut commands: Commands, function: F)
+where
+    F: Fn(f32) -> f32,
+{
+    let domain_points = generate_points(-10, 10, 0.02, function);
     let bezier_points = generate_path(&domain_points, 0.3, 0.3);
     let bezier = CubicBezier::new(bezier_points).to_curve();
     commands.spawn(Curve(bezier));
+}
+
+fn wave(x: f32) -> f32 {
+    wave_for_n(x, 1)
+}
+
+fn wave_for_n(x: f32, n: i32) -> f32 {
+    let l: f32 = 2.0;
+    (2.0 / l).sqrt() * ((n as f32 * PI * x) / l).sin()
 }
 
 fn setup_camera(mut commands: Commands) {
