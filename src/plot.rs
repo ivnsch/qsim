@@ -22,7 +22,12 @@ fn setup_light(mut commands: Commands) {
 }
 
 fn setup(mut commands: Commands) {
-    let domain_points = generate_points(-10, 10, 0.02, |x| x * x);
+    let l: f32 = 1.0;
+    let n: f32 = 1.0;
+    let domain_points = generate_points(-10, 10, 0.02, |x| {
+        (2.0 / l).sqrt() * ((n * PI * x) / l).sin()
+    });
+
     let bezier_points = generate_path(&domain_points, 0.3, 0.3);
     let bezier = CubicBezier::new(bezier_points).to_curve();
     commands.spawn(Curve(bezier));
