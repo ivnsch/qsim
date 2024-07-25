@@ -1,23 +1,12 @@
+use std::f32::consts::PI;
+
 use bevy::{color::palettes::css::WHITE, prelude::*};
 
 pub fn add_plot(app: &mut App) {
     app.add_plugins(DefaultPlugins)
-        .add_systems(Startup, (setup_camera, setup_light, setup))
+        .add_systems(Startup, (setup_camera, setup_light))
+        .add_systems(Startup, setup)
         .add_systems(Update, draw_curve);
-}
-
-fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0., 12., 12.).looking_at(Vec3::new(0., 3., 0.), Vec3::Y),
-        ..default()
-    });
-}
-
-fn setup_light(mut commands: Commands) {
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 1.0,
-    });
 }
 
 fn setup(mut commands: Commands) {
@@ -32,23 +21,39 @@ fn setup(mut commands: Commands) {
     commands.spawn(Curve(bezier));
 }
 
+fn setup_camera(mut commands: Commands) {
+    commands.spawn(Camera2dBundle {
+        projection: OrthographicProjection {
+            scale: 0.02,
+            ..default()
+        },
+        ..default()
+    });
+}
+
+fn setup_light(mut commands: Commands) {
+    commands.insert_resource(AmbientLight {
+        color: Color::WHITE,
+        brightness: 1.0,
+    });
+}
 
 // https://github.com/ivnsch/SwiftCharts/blob/c354c1945bb35a1f01b665b22474f6db28cba4a2/SwiftCharts/Views/CubicLinePathGenerator
-fn generate_path(points: &[Vec3], tension1: f32, tension2: f32) -> Vec<[Vec3; 4]> {
+fn generate_path(points: &[Vec2], tension1: f32, tension2: f32) -> Vec<[Vec2; 4]> {
     let mut path = vec![];
 
     if points.is_empty() {
         return path;
     }
 
-    let mut p0: Vec3;
-    let mut p1: Vec3;
-    let mut p2: Vec3;
-    let mut p3: Vec3;
+    let mut p0: Vec2;
+    let mut p1: Vec2;
+    let mut p2: Vec2;
+    let mut p3: Vec2;
     let mut tension_bezier1: f32;
     let mut tension_bezier2: f32;
 
-    let mut previous_point1 = Vec3::new(0.0, 0.0, 0.0);
+    let mut previous_point1 = Vec2::new(0.0, 0.0);
 
     for i in 0..(points.len() - 1) {
         p1 = points[i];
@@ -78,16 +83,14 @@ fn generate_path(points: &[Vec3], tension1: f32, tension2: f32) -> Vec<[Vec3; 4]
             tension_bezier2 = 0.0;
         }
 
-        let control_point1 = Vec3::new(
+        let control_point1 = Vec2::new(
             p1.x + (p2.x - p1.x) / 3.0,
             p1.y - (p1.y - p2.y) / 3.0 - (p0.y - p1.y) * tension_bezier1,
-            0.0,
         );
 
-        let control_point2 = Vec3::new(
+        let control_point2 = Vec2::new(
             p1.x + 2.0 * (p2.x - p1.x) / 3.0,
             p1.y - 2.0 * (p1.y - p2.y) / 3.0 + (p2.y - p3.y) * tension_bezier2,
-            0.0,
         );
 
         // println!(
@@ -104,26 +107,31 @@ fn generate_path(points: &[Vec3], tension1: f32, tension2: f32) -> Vec<[Vec3; 4]
 }
 
 #[derive(Component)]
-struct Curve(CubicCurve<Vec3>);
+struct Curve(CubicCurve<Vec2>);
 
 fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     for cubic_curve in &mut query {
         // Draw the curve
-        gizmos.linestrip(cubic_curve.0.iter_positions(100), WHITE);
+        gizmos.linestrip_2d(cubic_curve.0.iter_positions(500), WHITE);
     }
 }
 
-fn generate_points<F>(range_start: i32, range_end: i32, step: f32, function: F) -> Vec<Vec3>
+fn generate_points<F>(range_start: i32, range_end: i32, step: f32, function: F) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
+    // let scaling = 20.0;
+    let scaling = 1.0;
+    let x_scaling = scaling;
+    let y_scaling = scaling;
+
     let mut points = vec![];
     let mut value = range_start as f32;
     while value < range_end as f32 {
         let x = value;
         let y = function(x);
 
-        points.push(Vec3::new(x, y, 0.0));
+        points.push(Vec2::new(x, y));
 
         value += step;
     }
