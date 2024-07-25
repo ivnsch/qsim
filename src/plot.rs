@@ -1,7 +1,10 @@
 use std::f32::consts::PI;
 
 use bevy::{
-    color::palettes::css::{GRAY, GREEN, WHITE},
+    color::palettes::{
+        css::{GRAY, GREEN, WHITE},
+        tailwind::GRAY_500,
+    },
     prelude::*,
 };
 
@@ -17,21 +20,24 @@ pub fn add_plot(app: &mut App) {
 }
 
 fn setup_wave(commands: Commands) {
-    setup_curve(commands, |x| wave(x));
+    setup_curve(commands, |x| wave(x), GRAY_500);
 }
 
 fn setup_pdf(commands: Commands) {
-    setup_curve(commands, |x| wave(x).powi(2));
+    setup_curve(commands, |x| wave(x).powi(2), WHITE);
 }
 
-fn setup_curve<F>(mut commands: Commands, function: F)
+fn setup_curve<F>(mut commands: Commands, function: F, color: impl Into<Color>)
 where
     F: Fn(f32) -> f32,
 {
     let domain_points = generate_points(-10, 10, 0.02, function);
     let bezier_points = generate_path(&domain_points, 0.3, 0.3);
     let bezier = CubicBezier::new(bezier_points).to_curve();
-    commands.spawn(Curve(bezier));
+    commands.spawn(Curve {
+        points: bezier,
+        color: color.into(),
+    });
 }
 
 fn wave(x: f32) -> f32 {
@@ -129,12 +135,15 @@ fn generate_path(points: &[Vec2], tension1: f32, tension2: f32) -> Vec<[Vec2; 4]
 }
 
 #[derive(Component)]
-struct Curve(CubicCurve<Vec2>);
+struct Curve {
+    points: CubicCurve<Vec2>,
+    color: Color,
+}
 
 fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     for cubic_curve in &mut query {
         // Draw the curve
-        gizmos.linestrip_2d(cubic_curve.0.iter_positions(500), WHITE);
+        gizmos.linestrip_2d(cubic_curve.points.iter_positions(500), cubic_curve.color);
     }
 }
 
