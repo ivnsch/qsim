@@ -10,6 +10,7 @@ pub fn add_plot(app: &mut App) {
         .add_systems(Startup, (setup_camera, setup_light))
         .add_systems(Startup, setup)
         .add_systems(Update, setup_axes)
+        .add_systems(Update, setup_ticks)
         .add_systems(Update, draw_curve);
 }
 
@@ -145,4 +146,24 @@ fn setup_axes(mut gizmos: Gizmos) {
     gizmos.line_2d(Vec2 { x: -size, y: zero }, Vec2 { x: size, y: zero }, GREEN);
     // y
     gizmos.line_2d(Vec2 { x: zero, y: -size }, Vec2 { x: zero, y: size }, GREEN);
+}
+
+fn setup_ticks(mut gizmos: Gizmos) {
+    // for now hardcoded
+    let domain_points = generate_points(-10, 10, 1.0, |x| x);
+    let line_height = 0.5;
+    let half_line_height = line_height / 2.0;
+    for point in domain_points {
+        gizmos.line_2d(
+            Vec2 {
+                x: point.x,
+                y: -half_line_height,
+            },
+            Vec2 {
+                x: point.x,
+                y: half_line_height,
+            },
+            GREEN,
+        );
+    }
 }
