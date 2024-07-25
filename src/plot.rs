@@ -1,11 +1,15 @@
 use std::f32::consts::PI;
 
-use bevy::{color::palettes::css::WHITE, prelude::*};
+use bevy::{
+    color::palettes::css::{GREEN, WHITE},
+    prelude::*,
+};
 
 pub fn add_plot(app: &mut App) {
     app.add_plugins(DefaultPlugins)
         .add_systems(Startup, (setup_camera, setup_light))
         .add_systems(Startup, setup)
+        .add_systems(Update, setup_axes)
         .add_systems(Update, draw_curve);
 }
 
@@ -137,4 +141,13 @@ where
     }
 
     points
+}
+
+fn setup_axes(mut gizmos: Gizmos) {
+    let size = 300.0;
+    let zero = 0.0;
+    // x
+    gizmos.line_2d(Vec2 { x: -size, y: zero }, Vec2 { x: size, y: zero }, GREEN);
+    // y
+    gizmos.line_2d(Vec2 { x: zero, y: -size }, Vec2 { x: zero, y: size }, GREEN);
 }
