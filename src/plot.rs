@@ -147,7 +147,7 @@ struct Curve {
 fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     for cubic_curve in &mut query {
         // Draw the curve
-        gizmos.linestrip_2d(cubic_curve.points.iter_positions(500), cubic_curve.color);
+        gizmos.linestrip_2d(cubic_curve.points.iter_positions(1000), cubic_curve.color);
     }
 }
 
