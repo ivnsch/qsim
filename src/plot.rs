@@ -23,17 +23,16 @@ pub fn add_plot(app: &mut App) {
         .insert_resource(PlusMinusInput::Plus)
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, (setup_camera, setup_light))
-        .add_systems(Update, setup_wave)
-        .add_systems(Update, setup_pdf)
-        .add_systems(Update, setup_axes)
-        .add_systems(Update, setup_ticks)
-        .add_systems(Update, setup_vertical_dashed_line)
-        .add_systems(Update, draw_curve)
         .add_systems(
             Update,
             (
+                setup_wave,
+                setup_pdf,
+                setup_axes,
+                setup_ticks,
+                setup_vertical_dashed_line,
+                draw_curve,
                 listen_ui_inputs,
-                // form_state_notifier_system,
                 update_energy_level_label,
                 plus_button_handler,
                 minus_button_handler,
