@@ -6,11 +6,6 @@ use bevy::{
     prelude::*,
 };
 
-#[derive(Resource)]
-pub struct UiInputs {
-    // pub energy_level: String,
-}
-
 #[derive(Event, Default, Debug)]
 pub struct UiInputsEvent {
     pub energy_level: String,
