@@ -45,8 +45,23 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let root_id = root.id();
 
-    add_label(&mut commands, root_id, &font, "Energy level:");
+    add_header(&mut commands, root_id, &font, "Energy level:");
 
+    let energy_value_label = add_energy_level_value_row(&mut commands, &font, root_id);
+
+    commands.insert_resource(UiInputEntities {
+        energy_level: energy_value_label,
+    });
+
+    commands.spawn(EnergyLevel(1));
+}
+
+/// returns the label (entity) with the numeric value
+pub fn add_energy_level_value_row(
+    commands: &mut Commands,
+    font: &Handle<Font>,
+    root_id: Entity,
+) -> Entity {
     let row = NodeBundle {
         style: Style {
             position_type: PositionType::Relative,
@@ -62,6 +77,7 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         background_color: BackgroundColor(Color::BLACK),
         ..default()
     };
+
     let row_id = commands.spawn(row).id();
     commands.entity(root_id).push_children(&[row_id]);
 
@@ -73,17 +89,13 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         .entity(root_id)
         .push_children(&[spawned_energy_level_value_label]);
 
-    add_square_button(&mut commands, row_id, &font, "-", EnergyLevelMinusMarker);
-    add_square_button(&mut commands, row_id, &font, "+", EnergyLevelPlusMarker);
+    add_square_button(commands, row_id, &font, "-", EnergyLevelMinusMarker);
+    add_square_button(commands, row_id, &font, "+", EnergyLevelPlusMarker);
 
-    commands.insert_resource(UiInputEntities {
-        energy_level: spawned_energy_level_value_label,
-    });
-
-    commands.spawn(EnergyLevel(1));
+    spawned_energy_level_value_label
 }
 
-pub fn generate_label(font: &Handle<Font>, label: &str) -> TextBundle {
+pub fn generate_header(font: &Handle<Font>, label: &str) -> TextBundle {
     TextBundle {
         style: Style {
             position_type: PositionType::Relative,
@@ -105,13 +117,35 @@ pub fn generate_label(font: &Handle<Font>, label: &str) -> TextBundle {
     }
 }
 
-pub fn add_label(
+pub fn generate_label(font: &Handle<Font>, label: &str) -> TextBundle {
+    TextBundle {
+        style: Style {
+            position_type: PositionType::Relative,
+            top: Val::Px(0.0),
+            left: Val::Px(0.0),
+            width: Val::Px(30.0),
+            height: Val::Auto,
+            ..default()
+        },
+        text: Text::from_section(
+            label.to_string(),
+            TextStyle {
+                font: font.clone(),
+                font_size: 14.0,
+                color: Color::WHITE,
+            },
+        ),
+        ..default()
+    }
+}
+
+pub fn add_header(
     commands: &mut Commands,
     root_id: Entity,
     font: &Handle<Font>,
     label: &str,
 ) -> Entity {
-    let label = generate_label(font, label);
+    let label = generate_header(font, label);
     let spawned_label = commands.spawn(label).id();
     commands.entity(root_id).push_children(&[spawned_label]);
     spawned_label
