@@ -66,6 +66,7 @@ pub fn add_energy_level_value_row(
         style: Style {
             position_type: PositionType::Relative,
             flex_direction: FlexDirection::Row,
+            top: Val::Px(0.0),
             width: Val::Percent(100.0),
             height: Val::Px(30.0),
             margin: UiRect {
@@ -74,7 +75,6 @@ pub fn add_energy_level_value_row(
             },
             ..default()
         },
-        background_color: BackgroundColor(Color::BLACK),
         ..default()
     };
 
@@ -86,7 +86,7 @@ pub fn add_energy_level_value_row(
         .spawn((EnergyLabelMarker, energy_level_value_label))
         .id();
     commands
-        .entity(root_id)
+        .entity(row_id)
         .push_children(&[spawned_energy_level_value_label]);
 
     add_square_button(commands, row_id, &font, "-", EnergyLevelMinusMarker);
@@ -122,9 +122,10 @@ pub fn generate_label(font: &Handle<Font>, label: &str) -> TextBundle {
         style: Style {
             position_type: PositionType::Relative,
             top: Val::Px(0.0),
-            left: Val::Px(0.0),
+            left: Val::Px(10.0),
             width: Val::Px(30.0),
             height: Val::Auto,
+            align_self: AlignSelf::Center,
             ..default()
         },
         text: Text::from_section(
