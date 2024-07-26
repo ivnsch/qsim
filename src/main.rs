@@ -1,4 +1,5 @@
 mod plot;
+mod ui;
 
 use bevy::app::App;
 use plot::add_plot;

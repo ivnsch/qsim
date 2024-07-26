@@ -8,43 +8,95 @@ use bevy::{
     prelude::*,
 };
 
+use crate::ui::{
+    despawn_all_entities, listen_energy_level_ui_inputs, listen_ui_inputs, minus_button_handler,
+    plus_button_handler, setup_ui, update_energy_level_label, EnergyLevel, PlusMinusInput,
+    PlusMinusInputEvent, UiInputs, UiInputsEvent,
+};
+
 pub fn add_plot(app: &mut App) {
-    app.add_plugins(DefaultPlugins)
+    app.add_event::<UiInputsEvent>()
+        .add_event::<PlusMinusInputEvent>()
+        .insert_resource(UiInputs {
+            // energy_level: "1".to_owned(),
+        })
+        .insert_resource(PlusMinusInput::Plus)
+        .add_plugins(DefaultPlugins)
         .add_systems(Startup, (setup_camera, setup_light))
-        .add_systems(Startup, setup_wave)
-        .add_systems(Startup, setup_pdf)
+        .add_systems(Update, setup_wave)
+        .add_systems(Update, setup_pdf)
         .add_systems(Update, setup_axes)
         .add_systems(Update, setup_ticks)
         .add_systems(Update, setup_vertical_dashed_line)
-        .add_systems(Update, draw_curve);
+        .add_systems(Update, draw_curve)
+        .add_systems(
+            Update,
+            (
+                listen_ui_inputs,
+                // form_state_notifier_system,
+                update_energy_level_label,
+                plus_button_handler,
+                minus_button_handler,
+                listen_energy_level_ui_inputs,
+            ),
+        )
+        .add_systems(Startup, setup_ui);
 }
 
-fn setup_wave(commands: Commands) {
-    setup_curve(commands, |x| wave(x), GRAY_500);
+fn setup_wave(
+    mut commands: Commands,
+    energy_level_query: Query<&EnergyLevel>,
+    curve_query: Query<Entity, With<Curve>>,
+) {
+    for e in energy_level_query.iter() {
+        setup_curve(&mut commands, |x| wave(x, e), GRAY_500, e.0, &curve_query);
+    }
 }
 
-fn setup_pdf(commands: Commands) {
-    setup_curve(commands, |x| wave(x).powi(2), WHITE);
+fn setup_pdf(
+    mut commands: Commands,
+    energy_level_query: Query<&EnergyLevel>,
+    curve_query: Query<Entity, With<Curve>>,
+) {
+    for e in energy_level_query.iter() {
+        setup_curve(
+            &mut commands,
+            |x| wave(x, e).powi(2),
+            WHITE,
+            e.0,
+            &curve_query,
+        );
+    }
 }
 
-fn setup_curve<F>(mut commands: Commands, function: F, color: impl Into<Color>)
-where
+fn setup_curve<F>(
+    commands: &mut Commands,
+    function: F,
+    color: impl Into<Color>,
+    id: u32,
+    curve_query: &Query<Entity, With<Curve>>,
+) where
     F: Fn(f32) -> f32,
 {
+    despawn_all_entities(commands, curve_query);
+
     let domain_points = generate_points(-10, 10, 0.02, function);
     let bezier_points = generate_path(&domain_points, 0.3, 0.3);
     let bezier = CubicBezier::new(bezier_points).to_curve();
+
     commands.spawn(Curve {
+        id,
         points: bezier,
         color: color.into(),
     });
 }
 
-fn wave(x: f32) -> f32 {
-    wave_for_n(x, 1)
+fn wave(x: f32, level: &EnergyLevel) -> f32 {
+    // wave_for_n(x, 1)
+    wave_for_n(x, level.0)
 }
 
-fn wave_for_n(x: f32, n: i32) -> f32 {
+fn wave_for_n(x: f32, n: u32) -> f32 {
     let l: f32 = 2.0;
     (2.0 / l).sqrt() * ((n as f32 * PI * x) / l).sin()
 }
@@ -140,6 +192,8 @@ fn generate_path(points: &[Vec2], tension1: f32, tension2: f32) -> Vec<[Vec2; 4]
 
 #[derive(Component)]
 struct Curve {
+    #[allow(dead_code)]
+    id: u32, // debug - just to tell it apart from other curves in logs
     points: CubicCurve<Vec2>,
     color: Color,
 }
