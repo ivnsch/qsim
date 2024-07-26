@@ -45,6 +45,7 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let root_id = root.id();
 
+    add_header(&mut commands, root_id, &font, "Infinite square well");
     add_header(&mut commands, root_id, &font, "Energy level:");
 
     let energy_value_label = add_energy_level_value_row(&mut commands, &font, root_id);
@@ -69,10 +70,6 @@ pub fn add_energy_level_value_row(
             top: Val::Px(0.0),
             width: Val::Percent(100.0),
             height: Val::Px(30.0),
-            margin: UiRect {
-                top: Val::Px(10.0),
-                ..default()
-            },
             ..default()
         },
         ..default()
@@ -103,6 +100,10 @@ pub fn generate_header(font: &Handle<Font>, label: &str) -> TextBundle {
             left: Val::Px(0.0),
             width: Val::Percent(100.0),
             height: Val::Auto,
+            margin: UiRect {
+                bottom: Val::Px(10.0),
+                ..default()
+            },
             ..default()
         },
         text: Text::from_section(
