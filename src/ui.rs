@@ -200,6 +200,19 @@ where
     }
 }
 
+pub fn despawn_all_entities_tu<T, U>(
+    commands: &mut Commands,
+    query: &Query<Entity, (With<T>, With<U>)>,
+) where
+    T: Component,
+    U: Component,
+{
+    for e in query.iter() {
+        let entity = commands.entity(e);
+        entity.despawn_recursive();
+    }
+}
+
 pub fn plus_button_handler(
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor, &mut BorderColor),

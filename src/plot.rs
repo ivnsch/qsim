@@ -9,7 +9,7 @@ use bevy::{
 };
 
 use crate::ui::{
-    despawn_all_entities, listen_energy_level_ui_inputs, listen_ui_inputs, minus_button_handler,
+    despawn_all_entities_tu, listen_energy_level_ui_inputs, listen_ui_inputs, minus_button_handler,
     plus_button_handler, setup_ui, update_energy_level_label, EnergyLevel, PlusMinusInput,
     PlusMinusInputEvent, UiInputs, UiInputsEvent,
 };
@@ -46,7 +46,7 @@ pub fn add_plot(app: &mut App) {
 fn setup_wave(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
-    curve_query: Query<Entity, With<Curve>>,
+    curve_query: Query<Entity, (With<Curve>, With<CurveWave>)>,
 ) {
     for e in energy_level_query.iter() {
         setup_curve(&mut commands, |x| wave(x, e), GRAY_500, e.0, &curve_query);
@@ -56,7 +56,7 @@ fn setup_wave(
 fn setup_pdf(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
-    curve_query: Query<Entity, With<Curve>>,
+    curve_query: Query<Entity, (With<Curve>, With<CurvePDF>)>,
 ) {
     for e in energy_level_query.iter() {
         setup_curve(
@@ -69,26 +69,30 @@ fn setup_pdf(
     }
 }
 
-fn setup_curve<F>(
+fn setup_curve<F, T>(
     commands: &mut Commands,
     function: F,
     color: impl Into<Color>,
     id: u32,
-    curve_query: &Query<Entity, With<Curve>>,
+    curve_query: &Query<Entity, (With<Curve>, With<T>)>,
 ) where
     F: Fn(f32) -> f32,
+    T: Component,
 {
-    despawn_all_entities(commands, curve_query);
+    despawn_all_entities_tu(commands, curve_query);
 
     let domain_points = generate_points(-10, 10, 0.02, function);
     let bezier_points = generate_path(&domain_points, 0.3, 0.3);
     let bezier = CubicBezier::new(bezier_points).to_curve();
 
-    commands.spawn(Curve {
-        id,
-        points: bezier,
-        color: color.into(),
-    });
+    commands.spawn((
+        CurveWave,
+        Curve {
+            id,
+            points: bezier,
+            color: color.into(),
+        },
+    ));
 }
 
 fn wave(x: f32, level: &EnergyLevel) -> f32 {
@@ -197,6 +201,12 @@ struct Curve {
     points: CubicCurve<Vec2>,
     color: Color,
 }
+
+#[derive(Component)]
+struct CurveWave;
+
+#[derive(Component)]
+struct CurvePDF;
 
 fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     for cubic_curve in &mut query {
