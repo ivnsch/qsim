@@ -80,8 +80,8 @@ pub fn add_energy_level_value_row(
 
     let energy_level_value_entity = add_label(commands, row_id, font, "1", EnergyLabelMarker);
 
-    add_square_button(commands, row_id, &font, "-", EnergyLevelMinusMarker);
-    add_square_button(commands, row_id, &font, "+", EnergyLevelPlusMarker);
+    add_square_button(commands, row_id, font, "-", EnergyLevelMinusMarker);
+    add_square_button(commands, row_id, font, "+", EnergyLevelPlusMarker);
 
     energy_level_value_entity
 }
@@ -122,7 +122,7 @@ pub fn add_label<T>(
 where
     T: Component,
 {
-    let label = generate_label(&font, label);
+    let label = generate_label(font, label);
     let spawned_label = commands.spawn((marker, label)).id();
     commands.entity(row_id).push_children(&[spawned_label]);
     spawned_label
@@ -254,6 +254,7 @@ pub fn despawn_all_entities_tu<T, U>(
     }
 }
 
+#[allow(clippy::type_complexity)]
 pub fn plus_button_handler(
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor, &mut BorderColor),
@@ -270,6 +271,7 @@ pub fn plus_button_handler(
     }
 }
 
+#[allow(clippy::type_complexity)]
 pub fn minus_button_handler(
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor, &mut BorderColor),
