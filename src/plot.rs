@@ -261,16 +261,17 @@ fn setup_ticks(mut gizmos: Gizmos) {
 fn setup_vertical_dashed_line(mut gizmos: Gizmos) {
     let x = 2.0;
     // for now hardcoded
-    for y_start in -10..10 {
-        let y_start = y_start as f32;
-
+    let mut y_start = -10 as f32;
+    while y_start < 10 as f32 {
         gizmos.line_2d(
             Vec2 { x, y: y_start },
             Vec2 {
                 x,
-                y: y_start + 0.5,
+                y: y_start + 0.06,
             },
             GRAY,
         );
+
+        y_start += 0.1;
     }
 }
