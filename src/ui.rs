@@ -78,18 +78,12 @@ pub fn add_energy_level_value_row(
     let row_id = commands.spawn(row).id();
     commands.entity(root_id).push_children(&[row_id]);
 
-    let energy_level_value_label = generate_label(&font, "1");
-    let spawned_energy_level_value_label = commands
-        .spawn((EnergyLabelMarker, energy_level_value_label))
-        .id();
-    commands
-        .entity(row_id)
-        .push_children(&[spawned_energy_level_value_label]);
+    let energy_level_value_entity = add_label(commands, row_id, font, "1", EnergyLabelMarker);
 
     add_square_button(commands, row_id, &font, "-", EnergyLevelMinusMarker);
     add_square_button(commands, row_id, &font, "+", EnergyLevelPlusMarker);
 
-    spawned_energy_level_value_label
+    energy_level_value_entity
 }
 
 pub fn generate_header(font: &Handle<Font>, label: &str) -> TextBundle {
@@ -116,6 +110,22 @@ pub fn generate_header(font: &Handle<Font>, label: &str) -> TextBundle {
         ),
         ..default()
     }
+}
+
+pub fn add_label<T>(
+    commands: &mut Commands,
+    row_id: Entity,
+    font: &Handle<Font>,
+    label: &str,
+    marker: T,
+) -> Entity
+where
+    T: Component,
+{
+    let label = generate_label(&font, label);
+    let spawned_label = commands.spawn((marker, label)).id();
+    commands.entity(row_id).push_children(&[spawned_label]);
+    spawned_label
 }
 
 pub fn generate_label(font: &Handle<Font>, label: &str) -> TextBundle {
