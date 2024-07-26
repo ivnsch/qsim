@@ -1,11 +1,11 @@
+mod infinite_well_plot;
 mod plot;
 mod ui;
 
 use bevy::app::App;
-use plot::add_plot;
 
 fn main() {
     let app = &mut App::new();
-    add_plot(app);
+    infinite_well_plot::add_plot(app);
     app.run();
 }

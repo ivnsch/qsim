@@ -1,17 +1,12 @@
-use std::f32::consts::PI;
-
 use bevy::{
-    color::palettes::{
-        css::{GRAY, GREEN, WHITE},
-        tailwind::GRAY_500,
-    },
+    color::palettes::css::{GRAY, GREEN},
     prelude::*,
 };
 
 use crate::ui::{
     despawn_all_entities_tu, listen_energy_level_ui_inputs, listen_ui_inputs, minus_button_handler,
-    plus_button_handler, setup_ui, update_energy_level_label, EnergyLevel, PlusMinusInput,
-    PlusMinusInputEvent, UiInputsEvent,
+    plus_button_handler, setup_ui, update_energy_level_label, PlusMinusInput, PlusMinusInputEvent,
+    UiInputsEvent,
 };
 
 pub fn add_plot(app: &mut App) {
@@ -23,8 +18,6 @@ pub fn add_plot(app: &mut App) {
         .add_systems(
             Update,
             (
-                setup_wave,
-                setup_pdf,
                 setup_axes,
                 setup_ticks,
                 setup_vertical_dashed_line,
@@ -39,33 +32,7 @@ pub fn add_plot(app: &mut App) {
         .add_systems(Startup, setup_ui);
 }
 
-fn setup_wave(
-    mut commands: Commands,
-    energy_level_query: Query<&EnergyLevel>,
-    curve_query: Query<Entity, (With<Curve>, With<CurveWave>)>,
-) {
-    for e in energy_level_query.iter() {
-        setup_curve(&mut commands, |x| wave(x, e), GRAY_500, e.0, &curve_query);
-    }
-}
-
-fn setup_pdf(
-    mut commands: Commands,
-    energy_level_query: Query<&EnergyLevel>,
-    curve_query: Query<Entity, (With<Curve>, With<CurvePDF>)>,
-) {
-    for e in energy_level_query.iter() {
-        setup_curve(
-            &mut commands,
-            |x| wave(x, e).powi(2),
-            WHITE,
-            e.0,
-            &curve_query,
-        );
-    }
-}
-
-fn setup_curve<F, T>(
+pub fn setup_curve<F, T>(
     commands: &mut Commands,
     function: F,
     color: impl Into<Color>,
@@ -89,16 +56,6 @@ fn setup_curve<F, T>(
             color: color.into(),
         },
     ));
-}
-
-fn wave(x: f32, level: &EnergyLevel) -> f32 {
-    // wave_for_n(x, 1)
-    wave_for_n(x, level.0)
-}
-
-fn wave_for_n(x: f32, n: u32) -> f32 {
-    let l: f32 = 2.0;
-    (2.0 / l).sqrt() * ((n as f32 * PI * x) / l).sin()
 }
 
 fn setup_camera(mut commands: Commands) {
@@ -191,7 +148,7 @@ fn generate_path(points: &[Vec2], tension1: f32, tension2: f32) -> Vec<[Vec2; 4]
 }
 
 #[derive(Component)]
-struct Curve {
+pub struct Curve {
     #[allow(dead_code)]
     id: u32, // debug - just to tell it apart from other curves in logs
     points: CubicCurve<Vec2>,
@@ -199,10 +156,10 @@ struct Curve {
 }
 
 #[derive(Component)]
-struct CurveWave;
+pub struct CurveWave;
 
 #[derive(Component)]
-struct CurvePDF;
+pub struct CurvePDF;
 
 fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     for cubic_curve in &mut query {
