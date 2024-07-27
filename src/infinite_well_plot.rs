@@ -40,11 +40,6 @@ fn setup_pdf(
 }
 
 fn wave(x: f32, level: &EnergyLevel) -> f32 {
-    // wave_for_n(x, 1)
-    wave_for_n(x, level.0)
-}
-
-fn wave_for_n(x: f32, n: u32) -> f32 {
     let l: f32 = 2.0;
-    (2.0 / l).sqrt() * ((n as f32 * PI * x) / l).sin()
+    (2.0 / l).sqrt() * ((level.0 as f32 * PI * x) / l).sin()
 }
