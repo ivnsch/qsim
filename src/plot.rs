@@ -32,20 +32,18 @@ pub fn add_plot(app: &mut App) {
         .add_systems(Startup, setup_ui);
 }
 
-pub fn setup_curve<F, T>(
+pub fn setup_curve<T>(
     commands: &mut Commands,
-    function: F,
     color: impl Into<Color>,
     id: u32,
     curve_query: &Query<Entity, (With<Curve>, With<T>)>,
+    points: Vec<Vec2>,
 ) where
-    F: Fn(f32) -> f32,
     T: Component,
 {
     despawn_all_entities_tu(commands, curve_query);
 
-    let domain_points = generate_points(-10, 10, 0.02, function);
-    let bezier_points = generate_path(&domain_points, 0.3, 0.3);
+    let bezier_points = generate_path(&points, 0.3, 0.3);
     let bezier = CubicBezier::new(bezier_points).to_curve();
 
     commands.spawn((
@@ -65,7 +63,7 @@ fn setup_camera(mut commands: Commands) {
             ..default()
         },
         transform: Transform {
-            translation: Vec3::new(1.0, 0.0, 0.0),
+            translation: Vec3::new(0.4, 0.5, 0.0),
             ..default()
         },
         ..default()
@@ -168,7 +166,7 @@ fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     }
 }
 
-fn generate_points<F>(range_start: i32, range_end: i32, step: f32, function: F) -> Vec<Vec2>
+pub fn generate_points<F>(range_start: f32, range_end: f32, step: f32, function: F) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
@@ -197,17 +195,18 @@ fn setup_axes(mut gizmos: Gizmos) {
 
 fn setup_ticks(mut gizmos: Gizmos) {
     // for now hardcoded
-    let domain_points = generate_points(-10, 10, 1.0, |x| x);
+    let domain_points = generate_points(-2e-10, 2e-10, 1e-10, |x| x);
+    // let domain_points = generate_points(-10, 10, 1.0, |x| x);
     let line_height = 0.1;
     let half_line_height = line_height / 2.0;
     for point in domain_points {
         gizmos.line_2d(
             Vec2 {
-                x: point.x,
+                x: point.x * 1e10,
                 y: -half_line_height,
             },
             Vec2 {
-                x: point.x,
+                x: point.x * 1e10,
                 y: half_line_height,
             },
             GREEN,
