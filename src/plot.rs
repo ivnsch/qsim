@@ -44,8 +44,20 @@ pub fn setup_curve<F, T>(
 {
     despawn_all_entities_tu(commands, curve_query);
 
-    let domain_points = generate_points(-10, 10, 0.02, function);
-    let bezier_points = generate_path(&domain_points, 0.3, 0.3);
+    // let domain_points = generate_points(-10, 10, 0.02, function);
+    // let domain_points = generate_points(-1, 1, 0.00001, function);
+    let domain_points = generate_points(-2e-10, 2e-10, 1e-10, function);
+    // let domain_points = generate_points(-10e-10, 10e-10, 10e-12, |x| x);
+
+    println!("domain_points: {:?}", domain_points);
+
+    let scaled_points: Vec<Vec2> = domain_points
+        .into_iter()
+        .map(|p| Vec2::new(p.x * 1e10, p.y / 72414.0))
+        .collect();
+    println!("scaled points: {:?}", scaled_points);
+
+    let bezier_points = generate_path(&scaled_points, 0.3, 0.3);
     let bezier = CubicBezier::new(bezier_points).to_curve();
 
     commands.spawn((
@@ -61,7 +73,8 @@ pub fn setup_curve<F, T>(
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
-            scale: 0.005,
+            // scale: 0.005,
+            scale: 0.01,
             ..default()
         },
         transform: Transform {
@@ -168,7 +181,7 @@ fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     }
 }
 
-fn generate_points<F>(range_start: i32, range_end: i32, step: f32, function: F) -> Vec<Vec2>
+pub fn generate_points<F>(range_start: f32, range_end: f32, step: f32, function: F) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
@@ -197,17 +210,18 @@ fn setup_axes(mut gizmos: Gizmos) {
 
 fn setup_ticks(mut gizmos: Gizmos) {
     // for now hardcoded
-    let domain_points = generate_points(-10, 10, 1.0, |x| x);
+    let domain_points = generate_points(-2e-10, 2e-10, 1e-10, |x| x);
+    // let domain_points = generate_points(-10, 10, 1.0, |x| x);
     let line_height = 0.1;
     let half_line_height = line_height / 2.0;
     for point in domain_points {
         gizmos.line_2d(
             Vec2 {
-                x: point.x,
+                x: point.x * 1e10,
                 y: -half_line_height,
             },
             Vec2 {
-                x: point.x,
+                x: point.x * 1e10,
                 y: half_line_height,
             },
             GREEN,

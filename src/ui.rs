@@ -54,7 +54,7 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         energy_level: energy_value_label,
     });
 
-    commands.spawn(EnergyLevel(1));
+    commands.spawn(EnergyLevel(0));
 }
 
 /// returns the label (entity) with the numeric value
@@ -78,7 +78,7 @@ pub fn add_energy_level_value_row(
     let row_id = commands.spawn(row).id();
     commands.entity(root_id).push_children(&[row_id]);
 
-    let energy_level_value_entity = add_label(commands, row_id, font, "1", EnergyLabelMarker);
+    let energy_level_value_entity = add_label(commands, row_id, font, "0", EnergyLabelMarker);
 
     add_square_button(commands, row_id, font, "-", EnergyLevelMinusMarker);
     add_square_button(commands, row_id, font, "+", EnergyLevelPlusMarker);
