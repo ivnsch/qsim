@@ -174,7 +174,7 @@ where
 {
     let mut points = vec![];
     let mut value = range_start as f32;
-    while value < range_end as f32 {
+    while value <= range_end as f32 {
         let x = value;
         let y = function(x);
 
