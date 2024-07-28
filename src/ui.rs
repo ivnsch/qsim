@@ -61,6 +61,8 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         HarmonicOscillatorModelMarker,
     );
 
+    add_spacer(&mut commands, root_id);
+
     add_header(&mut commands, root_id, &font, "Energy level:");
 
     let init_energy_level = EnergyLevel(1);
@@ -110,6 +112,23 @@ pub fn add_energy_level_value_row(
     add_square_button(commands, row_id, font, "+", EnergyLevelPlusMarker);
 
     energy_level_value_entity
+}
+
+fn add_spacer(commands: &mut Commands, root_id: Entity) {
+    let spacer_id = commands
+        .spawn(NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                top: Val::Px(0.0),
+                right: Val::Px(0.0),
+                width: Val::Percent(100.0),
+                height: Val::Px(20.0),
+                ..default()
+            },
+            ..default()
+        })
+        .id();
+    commands.entity(root_id).push_children(&[spacer_id]);
 }
 
 pub fn generate_header(font: &Handle<Font>, label: &str) -> TextBundle {
