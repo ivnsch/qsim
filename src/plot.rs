@@ -65,7 +65,7 @@ pub fn setup_curve<T>(
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
-            scale: 0.005,
+            scale: 0.01,
             ..default()
         },
         transform: Transform {
