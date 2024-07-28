@@ -45,18 +45,6 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let root_id = root.id();
 
-    add_header(&mut commands, root_id, &font, "Infinite square well");
-    add_header(&mut commands, root_id, &font, "Energy level:");
-
-    let init_energy_level = EnergyLevel(1);
-    let energy_value_label =
-        add_energy_level_value_row(&mut commands, &font, root_id, init_energy_level);
-    commands.spawn(init_energy_level);
-
-    commands.insert_resource(UiInputEntities {
-        energy_level: energy_value_label,
-    });
-
     add_row_label(&mut commands, root_id, &font, "Potential model:");
     add_button(
         &mut commands,
@@ -72,6 +60,17 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         "Harmonic oscillator",
         HarmonicOscillatorModelMarker,
     );
+
+    add_header(&mut commands, root_id, &font, "Energy level:");
+
+    let init_energy_level = EnergyLevel(1);
+    let energy_value_label =
+        add_energy_level_value_row(&mut commands, &font, root_id, init_energy_level);
+    commands.spawn(init_energy_level);
+
+    commands.insert_resource(UiInputEntities {
+        energy_level: energy_value_label,
+    });
 
     let init_model = PotentialModelInput::InfiniteWell;
     commands.spawn(PotentialModel(init_model));
