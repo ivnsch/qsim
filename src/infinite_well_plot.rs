@@ -49,12 +49,8 @@ where
     F: Fn(f32) -> f32,
 {
     let domain_points = generate_points(-10.0, 10.0, 0.02, function);
-    let scaled_points: Vec<Vec2> = domain_points
-        .into_iter()
-        .map(|p| Vec2::new(p.x * 1e10, p.y)) // wave
-        .collect();
-
-    scaled_points
+    // for now no scaling needed, domain parameters happen to match screen dimensions
+    domain_points
 }
 
 /// Ψ_n(x)
