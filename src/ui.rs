@@ -56,6 +56,22 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(UiInputEntities {
         energy_level: energy_value_label,
     });
+
+    add_row_label(&mut commands, root_id, &font, "Potential model:");
+    add_button(
+        &mut commands,
+        root_id,
+        &font,
+        "Infinite well",
+        InfiniteWellModelMarker,
+    );
+    add_button(
+        &mut commands,
+        root_id,
+        &font,
+        "Harmonic oscillator",
+        HarmonicOscillatorModelMarker,
+    );
 }
 
 /// returns the label (entity) with the numeric value
@@ -80,7 +96,7 @@ pub fn add_energy_level_value_row(
     let row_id = commands.spawn(row).id();
     commands.entity(root_id).push_children(&[row_id]);
 
-    let energy_level_value_entity = add_label(
+    let energy_level_value_entity = add_button_label_with_marker(
         commands,
         row_id,
         font,
@@ -120,7 +136,19 @@ pub fn generate_header(font: &Handle<Font>, label: &str) -> TextBundle {
     }
 }
 
-pub fn add_label<T>(
+fn add_row_label(
+    commands: &mut Commands,
+    row_id: Entity,
+    font: &Handle<Font>,
+    label: &str,
+) -> Entity {
+    let label = generate_row_label(font, label);
+    let spawned_label = commands.spawn(label).id();
+    commands.entity(row_id).push_children(&[spawned_label]);
+    spawned_label
+}
+
+pub fn add_button_label_with_marker<T>(
     commands: &mut Commands,
     row_id: Entity,
     font: &Handle<Font>,
@@ -130,13 +158,36 @@ pub fn add_label<T>(
 where
     T: Component,
 {
-    let label = generate_label(font, label);
+    let label = generate_button_label(font, label);
     let spawned_label = commands.spawn((marker, label)).id();
     commands.entity(row_id).push_children(&[spawned_label]);
     spawned_label
 }
 
-pub fn generate_label(font: &Handle<Font>, label: &str) -> TextBundle {
+pub fn generate_row_label(font: &Handle<Font>, label: &str) -> TextBundle {
+    TextBundle {
+        style: Style {
+            position_type: PositionType::Relative,
+            top: Val::Px(0.0),
+            left: Val::Px(0.0),
+            width: Val::Percent(100.0),
+            height: Val::Auto,
+            align_self: AlignSelf::Center,
+            ..default()
+        },
+        text: Text::from_section(
+            label.to_string(),
+            TextStyle {
+                font: font.clone(),
+                font_size: 14.0,
+                color: Color::WHITE,
+            },
+        ),
+        ..default()
+    }
+}
+
+pub fn generate_button_label(font: &Handle<Font>, label: &str) -> TextBundle {
     TextBundle {
         style: Style {
             position_type: PositionType::Relative,
@@ -157,6 +208,49 @@ pub fn generate_label(font: &Handle<Font>, label: &str) -> TextBundle {
         ),
         ..default()
     }
+}
+
+pub fn add_button<T>(
+    commands: &mut Commands,
+    root_id: Entity,
+    font: &Handle<Font>,
+    label: &str,
+    marker: T,
+) where
+    T: Component,
+{
+    let button = commands
+        .spawn((
+            marker,
+            ButtonBundle {
+                style: Style {
+                    top: Val::Px(0.0),
+                    left: Val::Px(0.0),
+                    width: Val::Percent(100.0),
+                    height: Val::Px(30.0),
+                    // justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle {
+                text: Text::from_section(
+                    label.to_string(),
+                    TextStyle {
+                        font: font.clone(),
+                        font_size: 14.0,
+                        color: WHITE.into(),
+                    }
+                    .clone(),
+                ),
+                ..Default::default()
+            });
+        })
+        .id();
+    commands.entity(root_id).push_children(&[button]);
 }
 
 pub fn add_header(
@@ -371,4 +465,94 @@ pub enum PlusMinusInput {
 #[derive(Event, Default, Debug)]
 pub struct PlusMinusInputEvent {
     pub plus_minus: PlusMinusInput,
+}
+
+#[derive(Debug, Default, Clone, Copy, Resource, PartialEq)]
+pub enum PotentialModelInput {
+    #[default]
+    InfiniteWell,
+    HarmonicOscillator,
+}
+
+#[derive(Event, Default, Debug)]
+pub struct PotentialModelInputEvent {
+    pub model: PotentialModelInput,
+}
+
+#[derive(Component, Debug, Clone, Copy)]
+pub struct PotentialModel(pub PotentialModelInput);
+
+#[derive(Component, Default)]
+pub struct InfiniteWellModelMarker;
+
+#[derive(Component, Default)]
+pub struct HarmonicOscillatorModelMarker;
+
+#[allow(clippy::type_complexity)]
+pub fn infinite_well_model_button_handler(
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor, &mut BorderColor),
+        (Changed<Interaction>, With<InfiniteWellModelMarker>),
+    >,
+    mut my_events: EventWriter<PotentialModelInputEvent>,
+) {
+    for (interaction, mut color, mut border_color) in &mut interaction_query {
+        potential_model_button_handler(
+            (interaction, &mut color, &mut border_color),
+            &mut my_events,
+            PotentialModelInput::InfiniteWell,
+        );
+    }
+}
+
+#[allow(clippy::type_complexity)]
+pub fn harmonic_oscillator_button_handler(
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor, &mut BorderColor),
+        (Changed<Interaction>, With<HarmonicOscillatorModelMarker>),
+    >,
+    mut my_events: EventWriter<PotentialModelInputEvent>,
+) {
+    for (interaction, mut color, mut border_color) in &mut interaction_query {
+        potential_model_button_handler(
+            (interaction, &mut color, &mut border_color),
+            &mut my_events,
+            PotentialModelInput::HarmonicOscillator,
+        );
+    }
+}
+
+fn potential_model_button_handler(
+    interaction: (&Interaction, &mut BackgroundColor, &mut BorderColor),
+    my_events: &mut EventWriter<PotentialModelInputEvent>,
+    polarity: PotentialModelInput,
+) {
+    let (interaction, color, border_color) = interaction;
+    match *interaction {
+        Interaction::Pressed => {
+            *color = GREEN.into();
+            border_color.0 = GREEN.into();
+            my_events.send(PotentialModelInputEvent { model: polarity });
+        }
+        Interaction::Hovered => {}
+        Interaction::None => {
+            *color = BLACK.into();
+            border_color.0 = BLACK.into();
+        }
+    }
+}
+
+/// processes the gui events
+#[allow(clippy::too_many_arguments)]
+pub fn listen_potential_model_ui_inputs(
+    mut events: EventReader<PotentialModelInputEvent>,
+    mut commands: Commands,
+    polarity_query: Query<Entity, With<PotentialModel>>,
+) {
+    for input in events.read() {
+        despawn_all_entities(&mut commands, &polarity_query);
+
+        let polarity = PotentialModel(input.model);
+        commands.spawn(polarity);
+    }
 }

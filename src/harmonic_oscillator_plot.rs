@@ -1,6 +1,6 @@
 use crate::{
-    plot::{self, generate_points, setup_curve, Curve, CurvePDF, CurveWave},
-    ui::EnergyLevel,
+    plot::{generate_points, setup_curve, Curve, CurvePDF, CurveWave},
+    ui::{EnergyLevel, PotentialModel, PotentialModelInput},
 };
 use bevy::{
     color::palettes::{css::WHITE, tailwind::GRAY_500},
@@ -11,7 +11,6 @@ use std::f32::consts::{E, PI};
 const H_BAR: f32 = 1.054571817e-34;
 
 pub fn add_plot(app: &mut App) {
-    plot::add_plot(app);
     app.add_systems(Update, (setup_pdf, setup_psi));
 }
 
@@ -19,10 +18,15 @@ fn setup_psi(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurveWave>)>,
+    model: Query<&PotentialModel>,
 ) {
-    for e in energy_level_query.iter() {
-        let points = generate_psi_points(|x| psi(x, e, 9e-31, 10e16_f32));
-        setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
+    for m in model.iter() {
+        if m.0 == PotentialModelInput::HarmonicOscillator {
+            for e in energy_level_query.iter() {
+                let points = generate_psi_points(|x| psi(x, e, 9e-31, 10e16_f32));
+                setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
+            }
+        }
     }
 }
 
@@ -30,10 +34,15 @@ fn setup_pdf(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurvePDF>)>,
+    model: Query<&PotentialModel>,
 ) {
-    for e in energy_level_query.iter() {
-        let points = generate_pdf_points(|x| pdf(x, e, 9e-31, 10e16_f32));
-        setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
+    for m in model.iter() {
+        if m.0 == PotentialModelInput::HarmonicOscillator {
+            for e in energy_level_query.iter() {
+                let points = generate_pdf_points(|x| pdf(x, e, 9e-31, 10e16_f32));
+                setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
+            }
+        }
     }
 }
 

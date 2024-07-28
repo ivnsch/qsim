@@ -4,14 +4,17 @@ use bevy::{
 };
 
 use crate::ui::{
-    despawn_all_entities_tu, listen_energy_level_ui_inputs, listen_ui_inputs, minus_button_handler,
-    plus_button_handler, setup_ui, update_energy_level_label, PlusMinusInput, PlusMinusInputEvent,
-    UiInputsEvent,
+    despawn_all_entities_tu, harmonic_oscillator_button_handler,
+    infinite_well_model_button_handler, listen_energy_level_ui_inputs,
+    listen_potential_model_ui_inputs, listen_ui_inputs, minus_button_handler, plus_button_handler,
+    setup_ui, update_energy_level_label, PlusMinusInput, PlusMinusInputEvent,
+    PotentialModelInputEvent, UiInputsEvent,
 };
 
 pub fn add_plot(app: &mut App) {
     app.add_event::<UiInputsEvent>()
         .add_event::<PlusMinusInputEvent>()
+        .add_event::<PotentialModelInputEvent>()
         .insert_resource(PlusMinusInput::Plus)
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, (setup_camera, setup_light))
@@ -27,6 +30,9 @@ pub fn add_plot(app: &mut App) {
                 plus_button_handler,
                 minus_button_handler,
                 listen_energy_level_ui_inputs,
+                infinite_well_model_button_handler,
+                harmonic_oscillator_button_handler,
+                listen_potential_model_ui_inputs,
             ),
         )
         .add_systems(Startup, setup_ui);
