@@ -72,6 +72,9 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         "Harmonic oscillator",
         HarmonicOscillatorModelMarker,
     );
+
+    let init_model = PotentialModelInput::InfiniteWell;
+    commands.spawn(PotentialModel(init_model));
 }
 
 /// returns the label (entity) with the numeric value
