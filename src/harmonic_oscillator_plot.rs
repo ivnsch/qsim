@@ -109,14 +109,34 @@ where
     scaled_points
 }
 
-// TODO generate dynamically
 fn hermite_polynomial(level: &EnergyLevel) -> impl Fn(f32) -> f32 {
     match level.0 {
         0 => |_| 1.0,
         1 => |y| 2.0 * y,
-        2 => |y: f32| (4.0 * y).powi(2) - 2.0,
-        3 => |y: f32| (8.0 * y).powi(3) - (12.0 * y),
-        _ => panic!("TODO generate polynomials dynamically"),
+        2 => |y: f32| 4.0 * y.powi(2) - 2.0,
+        3 => |y: f32| 8.0 * y.powi(3) - 12.0 * y,
+        4 => |y: f32| 16.0 * y.powi(4) - 48.0 * y.powi(2) + 12.0,
+        5 => |y: f32| 32.0 * y.powi(5) - 160.0 * y.powi(3) + 120.0 * y,
+        6 => |y: f32| 64.0 * y.powi(6) - 480.0 * y.powi(4) + 720.0 * y.powi(2) - 120.0,
+        7 => |y: f32| 128.0 * y.powi(7) - 1344.0 * y.powi(5) + 3360.0 * y.powi(3) - 1680.0 * y,
+        8 => |y: f32| {
+            256.0 * y.powi(8) - 3584.0 * y.powi(6) + 13440.0 * y.powi(4) - 13440.0 * y.powi(2)
+                + 1680.0
+        },
+        9 => |y: f32| {
+            512.0 * y.powi(9) - 9216.0 * y.powi(7) + 48384.0 * y.powi(5) - 80640.0 * y.powi(3)
+                + 30240.0 * y
+        },
+        10 => |y: f32| {
+            1024.0 * y.powi(10) - 23040.0 * y.powi(8) + 161280.0 * y.powi(6) - 403200.0 * y.powi(4)
+                + 302400.0 * y.powi(2)
+                + 30240.0
+        },
+        // generating these dynamically seems not trivial in rust (crate for symbolic nth derivative?)
+        // for this project, supporting 10 energy levels seems fine (UI will prevent selecting higher levels)
+        // think there's also a recursive variant but yeah 10 levels is fine for now
+        // leniently using panic!, implementation detail, don't want to add noise downstream
+        _ => panic!("TODO polynomials not supported for n > 10"),
     }
 }
 

@@ -415,7 +415,10 @@ pub fn listen_energy_level_ui_inputs(
                 PlusMinusInput::Minus => -1,
             };
             let new_i = current as i32 + increment;
-            let new = cmp::max(0, new_i) as u32; // pressing "-" at 0 stays at 0
+            // pressing "-" at 0 stays at 0
+            let mut new = cmp::max(0, new_i) as u32;
+            // currently no hermitian polynomials for n > 10, and this seems not needed for now anyway
+            new = cmp::min(10, new);
 
             despawn_all_entities(&mut commands, &energy_level_entity_query);
             let energy_level = EnergyLevel(new);
