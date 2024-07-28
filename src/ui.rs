@@ -45,7 +45,7 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let root_id = root.id();
 
-    add_row_label(&mut commands, root_id, &font, "Potential model:");
+    add_header(&mut commands, root_id, &font, "Potential model:");
     add_button(
         &mut commands,
         root_id,
@@ -157,18 +157,6 @@ pub fn generate_header(font: &Handle<Font>, label: &str) -> TextBundle {
     }
 }
 
-fn add_row_label(
-    commands: &mut Commands,
-    row_id: Entity,
-    font: &Handle<Font>,
-    label: &str,
-) -> Entity {
-    let label = generate_row_label(font, label);
-    let spawned_label = commands.spawn(label).id();
-    commands.entity(row_id).push_children(&[spawned_label]);
-    spawned_label
-}
-
 pub fn add_button_label_with_marker<T>(
     commands: &mut Commands,
     row_id: Entity,
@@ -183,29 +171,6 @@ where
     let spawned_label = commands.spawn((marker, label)).id();
     commands.entity(row_id).push_children(&[spawned_label]);
     spawned_label
-}
-
-pub fn generate_row_label(font: &Handle<Font>, label: &str) -> TextBundle {
-    TextBundle {
-        style: Style {
-            position_type: PositionType::Relative,
-            top: Val::Px(0.0),
-            left: Val::Px(0.0),
-            width: Val::Percent(100.0),
-            height: Val::Auto,
-            align_self: AlignSelf::Center,
-            ..default()
-        },
-        text: Text::from_section(
-            label.to_string(),
-            TextStyle {
-                font: font.clone(),
-                font_size: 14.0,
-                color: Color::WHITE,
-            },
-        ),
-        ..default()
-    }
 }
 
 pub fn generate_button_label(font: &Handle<Font>, label: &str) -> TextBundle {
