@@ -21,7 +21,7 @@ fn setup_psi(
     for m in model.iter() {
         if m.0 == PotentialModelInput::InfiniteWell {
             for e in energy_level_query.iter() {
-                let points = generate_psi_points(|x| psi(x, e));
+                let points = generate_scaled_points(|x| psi(x, e));
                 setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
             }
         }
@@ -37,35 +37,21 @@ fn setup_pdf(
     for m in model.iter() {
         if m.0 == PotentialModelInput::InfiniteWell {
             for e in energy_level_query.iter() {
-                let points = generate_pdf_points(|x| pdf(x, e));
+                let points = generate_scaled_points(|x| pdf(x, e));
                 setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
             }
         }
     }
 }
 
-fn generate_psi_points<F>(function: F) -> Vec<Vec2>
-where
-    F: Fn(f32) -> f32,
-{
-    generate_psi_or_pdf_points(function, 1.0)
-}
-
-fn generate_pdf_points<F>(function: F) -> Vec<Vec2>
-where
-    F: Fn(f32) -> f32,
-{
-    generate_psi_or_pdf_points(function, 1.0)
-}
-
-fn generate_psi_or_pdf_points<F>(function: F, scale_y: f32) -> Vec<Vec2>
+fn generate_scaled_points<F>(function: F) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
     let domain_points = generate_points(-10.0, 10.0, 0.02, function);
     let scaled_points: Vec<Vec2> = domain_points
         .into_iter()
-        .map(|p| Vec2::new(p.x * 1e10, p.y * scale_y)) // wave
+        .map(|p| Vec2::new(p.x * 1e10, p.y)) // wave
         .collect();
 
     scaled_points
