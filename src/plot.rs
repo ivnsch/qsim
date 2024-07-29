@@ -22,7 +22,6 @@ pub fn add_plot(app: &mut App) {
             Update,
             (
                 setup_axes,
-                setup_ticks,
                 setup_vertical_dashed_line,
                 draw_curve,
                 listen_ui_inputs,
@@ -197,27 +196,6 @@ fn setup_axes(mut gizmos: Gizmos) {
     gizmos.line_2d(Vec2 { x: -size, y: zero }, Vec2 { x: size, y: zero }, GREEN);
     // y
     gizmos.line_2d(Vec2 { x: zero, y: -size }, Vec2 { x: zero, y: size }, GREEN);
-}
-
-fn setup_ticks(mut gizmos: Gizmos) {
-    // for now hardcoded
-    let domain_points = generate_points(-2e-10, 2e-10, 1e-10, |x| x);
-    // let domain_points = generate_points(-10, 10, 1.0, |x| x);
-    let line_height = 0.1;
-    let half_line_height = line_height / 2.0;
-    for point in domain_points {
-        gizmos.line_2d(
-            Vec2 {
-                x: point.x * 1e10,
-                y: -half_line_height,
-            },
-            Vec2 {
-                x: point.x * 1e10,
-                y: half_line_height,
-            },
-            GREEN,
-        );
-    }
 }
 
 fn setup_vertical_dashed_line(mut gizmos: Gizmos) {

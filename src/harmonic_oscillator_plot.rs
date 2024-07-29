@@ -3,15 +3,31 @@ use crate::{
     ui::{EnergyLevel, PotentialModel, PotentialModelInput},
 };
 use bevy::{
-    color::palettes::{css::WHITE, tailwind::GRAY_500},
+    color::palettes::{
+        css::{GREEN, WHITE},
+        tailwind::GRAY_500,
+    },
     prelude::*,
 };
 use std::f32::consts::{E, PI};
 
+const DOMAIN_RANGE_START: f32 = -2e-10;
+const DOMAIN_RANGE_END: f32 = 2e-10;
+
+// screen axes scaling
+// note final screen scale involves as well camera's transform
+const SCREEN_SCALE_X: f32 = 1e10;
+// scaled down y by ~max value so it fits in graph
+// TODO generic mapping to screen coords
+const SCREEN_SCALE_Y_PSI: f32 = 1.0 / 72414.0;
+// scaled dowwn y by eye to plot together with psi
+// exact height unimportant
+const SCREEN_SCALE_Y_PDF: f32 = 1.0 / 8000000000.0;
+
 const H_BAR: f32 = 1.054571817e-34;
 
 pub fn add_plot(app: &mut App) {
-    app.add_systems(Update, (setup_pdf, setup_psi));
+    app.add_systems(Update, (setup_pdf, setup_psi, setup_ticks));
 }
 
 fn setup_psi(
@@ -84,7 +100,7 @@ where
 {
     // scaled down y by ~max value so it fits in graph
     // TODO generic mapping to screen coords
-    generate_psi_or_pdf_points(function, 1.0 / 72414.0)
+    generate_psi_or_pdf_points(function, SCREEN_SCALE_Y_PSI)
 }
 
 fn generate_pdf_points<F>(function: F) -> Vec<Vec2>
@@ -93,17 +109,17 @@ where
 {
     // scaled dowwn y by eye to plot together with psi
     // exact height unimportant
-    generate_psi_or_pdf_points(function, 1.0 / 8000000000.0)
+    generate_psi_or_pdf_points(function, SCREEN_SCALE_Y_PDF)
 }
 
 fn generate_psi_or_pdf_points<F>(function: F, scale_y: f32) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
-    let domain_points = generate_points(-2e-10, 2e-10, 1e-12, function);
+    let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1e-12, function);
     let scaled_points: Vec<Vec2> = domain_points
         .into_iter()
-        .map(|p| Vec2::new(p.x * 1e10, p.y * scale_y)) // wave
+        .map(|p| Vec2::new(p.x * SCREEN_SCALE_X, p.y * scale_y)) // wave
         .collect();
 
     scaled_points
@@ -137,6 +153,26 @@ fn hermite_polynomial(level: &EnergyLevel) -> impl Fn(f32) -> f32 {
         // think there's also a recursive variant but yeah 10 levels is fine for now
         // leniently using panic!, implementation detail, don't want to add noise downstream
         _ => panic!("TODO polynomials not supported for n > 10"),
+    }
+}
+
+fn setup_ticks(mut gizmos: Gizmos) {
+    let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1e-10, |x| x);
+    let line_height = 0.1;
+    let half_line_height = line_height / 2.0;
+    for point in domain_points {
+        let x = point.x * SCREEN_SCALE_X;
+        gizmos.line_2d(
+            Vec2 {
+                x,
+                y: -half_line_height,
+            },
+            Vec2 {
+                x,
+                y: half_line_height,
+            },
+            GREEN,
+        );
     }
 }
 

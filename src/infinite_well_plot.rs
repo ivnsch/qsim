@@ -3,14 +3,24 @@ use crate::{
     ui::{EnergyLevel, PotentialModel, PotentialModelInput},
 };
 use bevy::{
-    color::palettes::{css::WHITE, tailwind::GRAY_500},
+    color::palettes::{
+        css::{GREEN, WHITE},
+        tailwind::GRAY_500,
+    },
     prelude::*,
 };
 use std::f32::consts::PI;
 
 pub fn add_plot(app: &mut App) {
-    app.add_systems(Update, (setup_pdf, setup_psi));
+    app.add_systems(Update, (setup_pdf, setup_psi, setup_ticks));
 }
+
+const DOMAIN_RANGE_START: f32 = -10.0;
+const DOMAIN_RANGE_END: f32 = -10.0;
+
+// screen axes scaling
+// note final screen scale involves as well camera's transform
+const SCREEN_SCALE_X: f32 = 1.0;
 
 fn setup_psi(
     mut commands: Commands,
@@ -63,4 +73,24 @@ fn psi(x: f32, level: &EnergyLevel) -> f32 {
 fn pdf(x: f32, level: &EnergyLevel) -> f32 {
     let psi = psi(x, level);
     psi.powi(2)
+}
+
+fn setup_ticks(mut gizmos: Gizmos) {
+    let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1.0, |x| x);
+    let line_height = 0.1;
+    let half_line_height = line_height / 2.0;
+    for point in domain_points {
+        let x = point.x * SCREEN_SCALE_X;
+        gizmos.line_2d(
+            Vec2 {
+                x,
+                y: -half_line_height,
+            },
+            Vec2 {
+                x,
+                y: half_line_height,
+            },
+            GREEN,
+        );
+    }
 }
