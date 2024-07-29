@@ -1,5 +1,5 @@
 use crate::{
-    plot::{generate_points, setup_curve, Curve, CurvePDF, CurveWave},
+    plot::{generate_points, setup_curve, Curve, CurvePDF, CurveWave, PlotSettings},
     ui::{EnergyLevel, PotentialModel, PotentialModelInput},
 };
 use bevy::{
@@ -20,15 +20,9 @@ pub fn add_plot(app: &mut App) {
             setup_ticks,
             setup_vertical_dashed_line,
         ),
-    );
+    )
+    .insert_resource(PlotSettings::default());
 }
-
-const DOMAIN_RANGE_START: f32 = -10.0;
-const DOMAIN_RANGE_END: f32 = -10.0;
-
-// screen axes scaling
-// note final screen scale involves as well camera's transform
-const SCREEN_SCALE_X: f32 = 1.0;
 
 fn setup_psi(
     mut commands: Commands,
@@ -83,14 +77,19 @@ fn pdf(x: f32, level: &EnergyLevel) -> f32 {
     psi.powi(2)
 }
 
-fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>) {
+fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>, settings: Res<PlotSettings>) {
     for m in model.iter() {
         if m.0 == PotentialModelInput::InfiniteWell {
-            let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1.0, |x| x);
+            let domain_points = generate_points(
+                settings.domain_range_start,
+                settings.domain_range_end,
+                1.0,
+                |x| x,
+            );
             let line_height = 0.1;
             let half_line_height = line_height / 2.0;
             for point in domain_points {
-                let x = point.x * SCREEN_SCALE_X;
+                let x = point.x * settings.screen_scale_x;
                 gizmos.line_2d(
                     Vec2 {
                         x,

@@ -8,6 +8,34 @@ use crate::ui::{
     PotentialModelInputEvent, UiInputsEvent,
 };
 
+#[derive(Resource)]
+pub struct PlotSettings {
+    pub domain_range_start: f32,
+    pub domain_range_end: f32,
+
+    // screen axes scaling
+    // note final screen scale involves as well camera's transform
+    pub screen_scale_x: f32,
+    // scaled down y by ~max value so it fits in graph
+    // todo generic mapping to screen coords
+    pub screen_scale_y_psi: f32,
+    // scaled dowwn y by eye to plot together with psi
+    // exact height unimportant
+    pub screen_scale_y_pdf: f32,
+}
+
+impl Default for PlotSettings {
+    fn default() -> Self {
+        Self {
+            domain_range_start: -10.0,
+            domain_range_end: 10.0,
+            screen_scale_x: 1.0,
+            screen_scale_y_psi: 1.0,
+            screen_scale_y_pdf: 1.0,
+        }
+    }
+}
+
 pub fn add_plot(app: &mut App) {
     app.add_event::<UiInputsEvent>()
         .add_event::<PlusMinusInputEvent>()

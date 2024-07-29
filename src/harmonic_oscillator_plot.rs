@@ -1,5 +1,5 @@
 use crate::{
-    plot::{generate_points, setup_curve, Curve, CurvePDF, CurveWave},
+    plot::{generate_points, setup_curve, Curve, CurvePDF, CurveWave, PlotSettings},
     ui::{EnergyLevel, PotentialModel, PotentialModelInput},
 };
 use bevy::{
@@ -11,23 +11,17 @@ use bevy::{
 };
 use std::f32::consts::{E, PI};
 
-const DOMAIN_RANGE_START: f32 = -2e-10;
-const DOMAIN_RANGE_END: f32 = 2e-10;
-
-// screen axes scaling
-// note final screen scale involves as well camera's transform
-const SCREEN_SCALE_X: f32 = 1e10;
-// scaled down y by ~max value so it fits in graph
-// TODO generic mapping to screen coords
-const SCREEN_SCALE_Y_PSI: f32 = 1.0 / 72414.0;
-// scaled dowwn y by eye to plot together with psi
-// exact height unimportant
-const SCREEN_SCALE_Y_PDF: f32 = 1.0 / 8000000000.0;
-
 const H_BAR: f32 = 1.054571817e-34;
 
 pub fn add_plot(app: &mut App) {
-    app.add_systems(Update, (setup_pdf, setup_psi, setup_ticks));
+    app.add_systems(Update, (setup_pdf, setup_psi, setup_ticks))
+        .insert_resource(PlotSettings {
+            domain_range_start: -2e-10,
+            domain_range_end: 2e-10,
+            screen_scale_x: 1e10,
+            screen_scale_y_psi: 1.0 / 72414.0,
+            screen_scale_y_pdf: 1.0 / 8000000000.0,
+        });
 }
 
 fn setup_psi(
@@ -35,11 +29,12 @@ fn setup_psi(
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurveWave>)>,
     model: Query<&PotentialModel>,
+    settings: Res<PlotSettings>,
 ) {
     for m in model.iter() {
         if m.0 == PotentialModelInput::HarmonicOscillator {
             for e in energy_level_query.iter() {
-                let points = generate_psi_points(|x| psi(x, e, 9e-31, 10e16_f32));
+                let points = generate_psi_points(|x| psi(x, e, 9e-31, 10e16_f32), &settings);
                 setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
             }
         }
@@ -51,11 +46,12 @@ fn setup_pdf(
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurvePDF>)>,
     model: Query<&PotentialModel>,
+    settings: Res<PlotSettings>,
 ) {
     for m in model.iter() {
         if m.0 == PotentialModelInput::HarmonicOscillator {
             for e in energy_level_query.iter() {
-                let points = generate_pdf_points(|x| pdf(x, e, 9e-31, 10e16_f32));
+                let points = generate_pdf_points(|x| pdf(x, e, 9e-31, 10e16_f32), &settings);
                 setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
             }
         }
@@ -94,32 +90,41 @@ fn calculate_normalization_constant(level: &EnergyLevel, mass: f32, ang_freq: f3
     term1 * term2
 }
 
-fn generate_psi_points<F>(function: F) -> Vec<Vec2>
+fn generate_psi_points<F>(function: F, settings: &Res<PlotSettings>) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
     // scaled down y by ~max value so it fits in graph
     // TODO generic mapping to screen coords
-    generate_psi_or_pdf_points(function, SCREEN_SCALE_Y_PSI)
+    generate_psi_or_pdf_points(function, settings.screen_scale_y_psi, settings)
 }
 
-fn generate_pdf_points<F>(function: F) -> Vec<Vec2>
+fn generate_pdf_points<F>(function: F, settings: &Res<PlotSettings>) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
     // scaled dowwn y by eye to plot together with psi
     // exact height unimportant
-    generate_psi_or_pdf_points(function, SCREEN_SCALE_Y_PDF)
+    generate_psi_or_pdf_points(function, settings.screen_scale_y_pdf, settings)
 }
 
-fn generate_psi_or_pdf_points<F>(function: F, scale_y: f32) -> Vec<Vec2>
+fn generate_psi_or_pdf_points<F>(
+    function: F,
+    scale_y: f32,
+    settings: &Res<PlotSettings>,
+) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
-    let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1e-12, function);
+    let domain_points = generate_points(
+        settings.domain_range_start,
+        settings.domain_range_end,
+        1e-12,
+        function,
+    );
     let scaled_points: Vec<Vec2> = domain_points
         .into_iter()
-        .map(|p| Vec2::new(p.x * SCREEN_SCALE_X, p.y * scale_y)) // wave
+        .map(|p| Vec2::new(p.x * settings.screen_scale_x, p.y * scale_y)) // wave
         .collect();
 
     scaled_points
@@ -156,14 +161,19 @@ fn hermite_polynomial(level: &EnergyLevel) -> impl Fn(f32) -> f32 {
     }
 }
 
-fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>) {
+fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>, settings: Res<PlotSettings>) {
     for m in model.iter() {
         if m.0 == PotentialModelInput::HarmonicOscillator {
-            let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1e-10, |x| x);
+            let domain_points = generate_points(
+                settings.domain_range_start,
+                settings.domain_range_end,
+                1e-10,
+                |x| x,
+            );
             let line_height = 0.1;
             let half_line_height = line_height / 2.0;
             for point in domain_points {
-                let x = point.x * SCREEN_SCALE_X;
+                let x = point.x * settings.screen_scale_x;
                 gizmos.line_2d(
                     Vec2 {
                         x,
