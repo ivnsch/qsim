@@ -1,7 +1,4 @@
-use bevy::{
-    color::palettes::css::{GRAY, GREEN},
-    prelude::*,
-};
+use bevy::{color::palettes::css::GREEN, prelude::*};
 
 use crate::ui::{
     despawn_all_entities_tu, harmonic_oscillator_button_handler,
@@ -22,7 +19,6 @@ pub fn add_plot(app: &mut App) {
             Update,
             (
                 setup_axes,
-                setup_vertical_dashed_line,
                 draw_curve,
                 listen_ui_inputs,
                 update_energy_level_label,
@@ -196,22 +192,4 @@ fn setup_axes(mut gizmos: Gizmos) {
     gizmos.line_2d(Vec2 { x: -size, y: zero }, Vec2 { x: size, y: zero }, GREEN);
     // y
     gizmos.line_2d(Vec2 { x: zero, y: -size }, Vec2 { x: zero, y: size }, GREEN);
-}
-
-fn setup_vertical_dashed_line(mut gizmos: Gizmos) {
-    let x = 2.0;
-    // for now hardcoded
-    let mut y_start = -10_f32;
-    while y_start < 10_f32 {
-        gizmos.line_2d(
-            Vec2 { x, y: y_start },
-            Vec2 {
-                x,
-                y: y_start + 0.06,
-            },
-            GRAY,
-        );
-
-        y_start += 0.1;
-    }
 }

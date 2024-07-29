@@ -4,7 +4,7 @@ use crate::{
 };
 use bevy::{
     color::palettes::{
-        css::{GREEN, WHITE},
+        css::{GRAY, GREEN, WHITE},
         tailwind::GRAY_500,
     },
     prelude::*,
@@ -12,7 +12,15 @@ use bevy::{
 use std::f32::consts::PI;
 
 pub fn add_plot(app: &mut App) {
-    app.add_systems(Update, (setup_pdf, setup_psi, setup_ticks));
+    app.add_systems(
+        Update,
+        (
+            setup_pdf,
+            setup_psi,
+            setup_ticks,
+            setup_vertical_dashed_line,
+        ),
+    );
 }
 
 const DOMAIN_RANGE_START: f32 = -10.0;
@@ -92,5 +100,23 @@ fn setup_ticks(mut gizmos: Gizmos) {
             },
             GREEN,
         );
+    }
+}
+
+fn setup_vertical_dashed_line(mut gizmos: Gizmos) {
+    let x = 2.0;
+    // for now hardcoded
+    let mut y_start = -10_f32;
+    while y_start < 10_f32 {
+        gizmos.line_2d(
+            Vec2 { x, y: y_start },
+            Vec2 {
+                x,
+                y: y_start + 0.06,
+            },
+            GRAY,
+        );
+
+        y_start += 0.1;
     }
 }
