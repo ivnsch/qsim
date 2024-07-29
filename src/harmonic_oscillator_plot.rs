@@ -156,23 +156,27 @@ fn hermite_polynomial(level: &EnergyLevel) -> impl Fn(f32) -> f32 {
     }
 }
 
-fn setup_ticks(mut gizmos: Gizmos) {
-    let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1e-10, |x| x);
-    let line_height = 0.1;
-    let half_line_height = line_height / 2.0;
-    for point in domain_points {
-        let x = point.x * SCREEN_SCALE_X;
-        gizmos.line_2d(
-            Vec2 {
-                x,
-                y: -half_line_height,
-            },
-            Vec2 {
-                x,
-                y: half_line_height,
-            },
-            GREEN,
-        );
+fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>) {
+    for m in model.iter() {
+        if m.0 == PotentialModelInput::HarmonicOscillator {
+            let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1e-10, |x| x);
+            let line_height = 0.1;
+            let half_line_height = line_height / 2.0;
+            for point in domain_points {
+                let x = point.x * SCREEN_SCALE_X;
+                gizmos.line_2d(
+                    Vec2 {
+                        x,
+                        y: -half_line_height,
+                    },
+                    Vec2 {
+                        x,
+                        y: half_line_height,
+                    },
+                    GREEN,
+                );
+            }
+        }
     }
 }
 

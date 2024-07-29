@@ -83,40 +83,48 @@ fn pdf(x: f32, level: &EnergyLevel) -> f32 {
     psi.powi(2)
 }
 
-fn setup_ticks(mut gizmos: Gizmos) {
-    let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1.0, |x| x);
-    let line_height = 0.1;
-    let half_line_height = line_height / 2.0;
-    for point in domain_points {
-        let x = point.x * SCREEN_SCALE_X;
-        gizmos.line_2d(
-            Vec2 {
-                x,
-                y: -half_line_height,
-            },
-            Vec2 {
-                x,
-                y: half_line_height,
-            },
-            GREEN,
-        );
+fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>) {
+    for m in model.iter() {
+        if m.0 == PotentialModelInput::InfiniteWell {
+            let domain_points = generate_points(DOMAIN_RANGE_START, DOMAIN_RANGE_END, 1.0, |x| x);
+            let line_height = 0.1;
+            let half_line_height = line_height / 2.0;
+            for point in domain_points {
+                let x = point.x * SCREEN_SCALE_X;
+                gizmos.line_2d(
+                    Vec2 {
+                        x,
+                        y: -half_line_height,
+                    },
+                    Vec2 {
+                        x,
+                        y: half_line_height,
+                    },
+                    GREEN,
+                );
+            }
+        }
     }
 }
 
-fn setup_vertical_dashed_line(mut gizmos: Gizmos) {
-    let x = 2.0;
-    // for now hardcoded
-    let mut y_start = -10_f32;
-    while y_start < 10_f32 {
-        gizmos.line_2d(
-            Vec2 { x, y: y_start },
-            Vec2 {
-                x,
-                y: y_start + 0.06,
-            },
-            GRAY,
-        );
+fn setup_vertical_dashed_line(mut gizmos: Gizmos, model: Query<&PotentialModel>) {
+    for m in model.iter() {
+        if m.0 == PotentialModelInput::InfiniteWell {
+            let x = 2.0;
+            // for now hardcoded
+            let mut y_start = -10_f32;
+            while y_start < 10_f32 {
+                gizmos.line_2d(
+                    Vec2 { x, y: y_start },
+                    Vec2 {
+                        x,
+                        y: y_start + 0.06,
+                    },
+                    GRAY,
+                );
 
-        y_start += 0.1;
+                y_start += 0.1;
+            }
+        }
     }
 }
