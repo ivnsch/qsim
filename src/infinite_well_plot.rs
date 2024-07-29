@@ -83,7 +83,7 @@ fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>, settings: Res<
             let domain_points = generate_points(
                 settings.domain_range_start,
                 settings.domain_range_end,
-                1.0,
+                settings.ticks_step,
                 |x| x,
             );
             let line_height = 0.1;

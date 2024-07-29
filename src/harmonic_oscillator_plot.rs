@@ -21,6 +21,7 @@ pub fn add_plot(app: &mut App) {
             screen_scale_x: 1e10,
             screen_scale_y_psi: 1.0 / 72414.0,
             screen_scale_y_pdf: 1.0 / 8000000000.0,
+            ticks_step: 1e-10,
         });
 }
 
@@ -167,7 +168,7 @@ fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>, settings: Res<
             let domain_points = generate_points(
                 settings.domain_range_start,
                 settings.domain_range_end,
-                1e-10,
+                settings.ticks_step,
                 |x| x,
             );
             let line_height = 0.1;

@@ -22,6 +22,8 @@ pub struct PlotSettings {
     // scaled dowwn y by eye to plot together with psi
     // exact height unimportant
     pub screen_scale_y_pdf: f32,
+
+    pub ticks_step: f32,
 }
 
 impl Default for PlotSettings {
@@ -32,6 +34,7 @@ impl Default for PlotSettings {
             screen_scale_x: 1.0,
             screen_scale_y_psi: 1.0,
             screen_scale_y_pdf: 1.0,
+            ticks_step: 1.0,
         }
     }
 }
