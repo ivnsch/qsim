@@ -2,7 +2,7 @@ use crate::{
     plot::{
         generate_points, setup_curve, setup_plot_ticks, Curve, CurvePDF, CurveWave, PlotSettings,
     },
-    ui::{EnergyLevel, PotentialModel, PotentialModelInput},
+    ui::{EnergyLevel, PotentialModelInput},
 };
 use bevy::{
     color::palettes::{
@@ -33,14 +33,12 @@ fn setup_psi(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurveWave>)>,
-    model: Query<&PotentialModel>,
+    model: Res<PotentialModelInput>,
 ) {
-    for m in model.iter() {
-        if m.0 == PotentialModelInput::InfiniteWell {
-            for e in energy_level_query.iter() {
-                let points = generate_scaled_points(|x| psi(x, e));
-                setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
-            }
+    if *model == PotentialModelInput::InfiniteWell {
+        for e in energy_level_query.iter() {
+            let points = generate_scaled_points(|x| psi(x, e));
+            setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
         }
     }
 }
@@ -49,14 +47,12 @@ fn setup_pdf(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurvePDF>)>,
-    model: Query<&PotentialModel>,
+    model: Res<PotentialModelInput>,
 ) {
-    for m in model.iter() {
-        if m.0 == PotentialModelInput::InfiniteWell {
-            for e in energy_level_query.iter() {
-                let points = generate_scaled_points(|x| pdf(x, e));
-                setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
-            }
+    if *model == PotentialModelInput::InfiniteWell {
+        for e in energy_level_query.iter() {
+            let points = generate_scaled_points(|x| pdf(x, e));
+            setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
         }
     }
 }
@@ -82,24 +78,22 @@ fn pdf(x: f32, level: &EnergyLevel) -> f32 {
     psi.powi(2)
 }
 
-fn setup_vertical_dashed_line(mut gizmos: Gizmos, model: Query<&PotentialModel>) {
-    for m in model.iter() {
-        if m.0 == PotentialModelInput::InfiniteWell {
-            let x = 2.0;
-            // for now hardcoded
-            let mut y_start = -10_f32;
-            while y_start < 10_f32 {
-                gizmos.line_2d(
-                    Vec2 { x, y: y_start },
-                    Vec2 {
-                        x,
-                        y: y_start + 0.06,
-                    },
-                    GRAY,
-                );
+fn setup_vertical_dashed_line(mut gizmos: Gizmos, model: Res<PotentialModelInput>) {
+    if *model == PotentialModelInput::InfiniteWell {
+        let x = 2.0;
+        // for now hardcoded
+        let mut y_start = -10_f32;
+        while y_start < 10_f32 {
+            gizmos.line_2d(
+                Vec2 { x, y: y_start },
+                Vec2 {
+                    x,
+                    y: y_start + 0.06,
+                },
+                GRAY,
+            );
 
-                y_start += 0.1;
-            }
+            y_start += 0.1;
         }
     }
 }
@@ -107,11 +101,9 @@ fn setup_vertical_dashed_line(mut gizmos: Gizmos, model: Query<&PotentialModel>)
 fn setup_ticks(
     mut gizmos: Gizmos,
     settings: Res<InfiniteWellPlotSettings>,
-    model: Query<&PotentialModel>,
+    model: Res<PotentialModelInput>,
 ) {
-    for m in model.iter() {
-        if m.0 == PotentialModelInput::InfiniteWell {
-            setup_plot_ticks(&mut gizmos, settings.0.clone())
-        }
+    if *model == PotentialModelInput::InfiniteWell {
+        setup_plot_ticks(&mut gizmos, settings.0.clone())
     }
 }

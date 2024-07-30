@@ -74,8 +74,7 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         energy_level: energy_value_label,
     });
 
-    let init_model = PotentialModelInput::InfiniteWell;
-    commands.spawn(PotentialModel(init_model));
+    commands.insert_resource(PotentialModelInput::InfiniteWell);
 }
 
 /// returns the label (entity) with the numeric value
@@ -468,9 +467,6 @@ pub struct PotentialModelInputEvent {
     pub model: PotentialModelInput,
 }
 
-#[derive(Component, Debug, Clone, Copy)]
-pub struct PotentialModel(pub PotentialModelInput);
-
 #[derive(Component, Default)]
 pub struct InfiniteWellModelMarker;
 
@@ -535,13 +531,9 @@ fn potential_model_button_handler(
 #[allow(clippy::too_many_arguments)]
 pub fn listen_potential_model_ui_inputs(
     mut events: EventReader<PotentialModelInputEvent>,
-    mut commands: Commands,
-    polarity_query: Query<Entity, With<PotentialModel>>,
+    mut model: ResMut<PotentialModelInput>,
 ) {
     for input in events.read() {
-        despawn_all_entities(&mut commands, &polarity_query);
-
-        let polarity = PotentialModel(input.model);
-        commands.spawn(polarity);
+        *model = input.model;
     }
 }
