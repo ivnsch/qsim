@@ -8,7 +8,7 @@ use crate::ui::{
     PotentialModelInputEvent, UiInputsEvent,
 };
 
-#[derive(Resource)]
+#[derive(Resource, Clone)]
 pub struct PlotSettings {
     pub domain_range_start: f32,
     pub domain_range_end: f32,
@@ -34,7 +34,7 @@ impl Default for PlotSettings {
             screen_scale_x: 1.0,
             screen_scale_y_psi: 1.0,
             screen_scale_y_pdf: 1.0,
-            ticks_step: 1.0,
+            ticks_step: 30.0,
         }
     }
 }
@@ -223,4 +223,29 @@ fn setup_axes(mut gizmos: Gizmos) {
     gizmos.line_2d(Vec2 { x: -size, y: zero }, Vec2 { x: size, y: zero }, GREEN);
     // y
     gizmos.line_2d(Vec2 { x: zero, y: -size }, Vec2 { x: zero, y: size }, GREEN);
+}
+
+pub fn setup_plot_ticks(gizmos: &mut Gizmos, settings: PlotSettings) {
+    let domain_points = generate_points(
+        settings.domain_range_start,
+        settings.domain_range_end,
+        settings.ticks_step,
+        |x| x,
+    );
+    let line_height = 0.1;
+    let half_line_height = line_height / 2.0;
+    for point in domain_points {
+        let x = point.x * settings.screen_scale_x;
+        gizmos.line_2d(
+            Vec2 {
+                x,
+                y: -half_line_height,
+            },
+            Vec2 {
+                x,
+                y: half_line_height,
+            },
+            GREEN,
+        );
+    }
 }

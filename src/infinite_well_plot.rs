@@ -1,15 +1,20 @@
 use crate::{
-    plot::{generate_points, setup_curve, Curve, CurvePDF, CurveWave, PlotSettings},
+    plot::{
+        generate_points, setup_curve, setup_plot_ticks, Curve, CurvePDF, CurveWave, PlotSettings,
+    },
     ui::{EnergyLevel, PotentialModel, PotentialModelInput},
 };
 use bevy::{
     color::palettes::{
-        css::{GRAY, GREEN, WHITE},
+        css::{GRAY, WHITE},
         tailwind::GRAY_500,
     },
     prelude::*,
 };
 use std::f32::consts::PI;
+
+#[derive(Resource)]
+pub struct InfiniteWellPlotSettings(PlotSettings);
 
 pub fn add_plot(app: &mut App) {
     app.add_systems(
@@ -21,7 +26,7 @@ pub fn add_plot(app: &mut App) {
             setup_vertical_dashed_line,
         ),
     )
-    .insert_resource(PlotSettings::default());
+    .insert_resource(InfiniteWellPlotSettings(PlotSettings::default()));
 }
 
 fn setup_psi(
@@ -77,35 +82,6 @@ fn pdf(x: f32, level: &EnergyLevel) -> f32 {
     psi.powi(2)
 }
 
-fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>, settings: Res<PlotSettings>) {
-    for m in model.iter() {
-        if m.0 == PotentialModelInput::InfiniteWell {
-            let domain_points = generate_points(
-                settings.domain_range_start,
-                settings.domain_range_end,
-                settings.ticks_step,
-                |x| x,
-            );
-            let line_height = 0.1;
-            let half_line_height = line_height / 2.0;
-            for point in domain_points {
-                let x = point.x * settings.screen_scale_x;
-                gizmos.line_2d(
-                    Vec2 {
-                        x,
-                        y: -half_line_height,
-                    },
-                    Vec2 {
-                        x,
-                        y: half_line_height,
-                    },
-                    GREEN,
-                );
-            }
-        }
-    }
-}
-
 fn setup_vertical_dashed_line(mut gizmos: Gizmos, model: Query<&PotentialModel>) {
     for m in model.iter() {
         if m.0 == PotentialModelInput::InfiniteWell {
@@ -124,6 +100,18 @@ fn setup_vertical_dashed_line(mut gizmos: Gizmos, model: Query<&PotentialModel>)
 
                 y_start += 0.1;
             }
+        }
+    }
+}
+
+fn setup_ticks(
+    mut gizmos: Gizmos,
+    settings: Res<InfiniteWellPlotSettings>,
+    model: Query<&PotentialModel>,
+) {
+    for m in model.iter() {
+        if m.0 == PotentialModelInput::InfiniteWell {
+            setup_plot_ticks(&mut gizmos, settings.0.clone())
         }
     }
 }

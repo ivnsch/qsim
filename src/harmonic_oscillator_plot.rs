@@ -1,28 +1,30 @@
 use crate::{
-    plot::{generate_points, setup_curve, Curve, CurvePDF, CurveWave, PlotSettings},
+    plot::{
+        generate_points, setup_curve, setup_plot_ticks, Curve, CurvePDF, CurveWave, PlotSettings,
+    },
     ui::{EnergyLevel, PotentialModel, PotentialModelInput},
 };
 use bevy::{
-    color::palettes::{
-        css::{GREEN, WHITE},
-        tailwind::GRAY_500,
-    },
+    color::palettes::{css::WHITE, tailwind::GRAY_500},
     prelude::*,
 };
 use std::f32::consts::{E, PI};
 
 const H_BAR: f32 = 1.054571817e-34;
 
+#[derive(Resource)]
+pub struct HarmonicOscillatorPlotSettings(pub PlotSettings);
+
 pub fn add_plot(app: &mut App) {
     app.add_systems(Update, (setup_pdf, setup_psi, setup_ticks))
-        .insert_resource(PlotSettings {
+        .insert_resource(HarmonicOscillatorPlotSettings(PlotSettings {
             domain_range_start: -2e-10,
             domain_range_end: 2e-10,
             screen_scale_x: 1e10,
             screen_scale_y_psi: 1.0 / 72414.0,
             screen_scale_y_pdf: 1.0 / 8000000000.0,
             ticks_step: 1e-10,
-        });
+        }));
 }
 
 fn setup_psi(
@@ -30,12 +32,13 @@ fn setup_psi(
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurveWave>)>,
     model: Query<&PotentialModel>,
-    settings: Res<PlotSettings>,
+    settings: Res<HarmonicOscillatorPlotSettings>,
 ) {
     for m in model.iter() {
         if m.0 == PotentialModelInput::HarmonicOscillator {
             for e in energy_level_query.iter() {
-                let points = generate_psi_points(|x| psi(x, e, 9e-31, 10e16_f32), &settings);
+                let points =
+                    generate_psi_points(|x| psi(x, e, 9e-31, 10e16_f32), &settings.0.clone());
                 setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
             }
         }
@@ -47,12 +50,13 @@ fn setup_pdf(
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurvePDF>)>,
     model: Query<&PotentialModel>,
-    settings: Res<PlotSettings>,
+    settings: Res<HarmonicOscillatorPlotSettings>,
 ) {
     for m in model.iter() {
         if m.0 == PotentialModelInput::HarmonicOscillator {
             for e in energy_level_query.iter() {
-                let points = generate_pdf_points(|x| pdf(x, e, 9e-31, 10e16_f32), &settings);
+                let points =
+                    generate_pdf_points(|x| pdf(x, e, 9e-31, 10e16_f32), &settings.0.clone());
                 setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
             }
         }
@@ -91,7 +95,7 @@ fn calculate_normalization_constant(level: &EnergyLevel, mass: f32, ang_freq: f3
     term1 * term2
 }
 
-fn generate_psi_points<F>(function: F, settings: &Res<PlotSettings>) -> Vec<Vec2>
+fn generate_psi_points<F>(function: F, settings: &PlotSettings) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
@@ -100,7 +104,7 @@ where
     generate_psi_or_pdf_points(function, settings.screen_scale_y_psi, settings)
 }
 
-fn generate_pdf_points<F>(function: F, settings: &Res<PlotSettings>) -> Vec<Vec2>
+fn generate_pdf_points<F>(function: F, settings: &PlotSettings) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
@@ -109,11 +113,7 @@ where
     generate_psi_or_pdf_points(function, settings.screen_scale_y_pdf, settings)
 }
 
-fn generate_psi_or_pdf_points<F>(
-    function: F,
-    scale_y: f32,
-    settings: &Res<PlotSettings>,
-) -> Vec<Vec2>
+fn generate_psi_or_pdf_points<F>(function: F, scale_y: f32, settings: &PlotSettings) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
 {
@@ -162,31 +162,14 @@ fn hermite_polynomial(level: &EnergyLevel) -> impl Fn(f32) -> f32 {
     }
 }
 
-fn setup_ticks(mut gizmos: Gizmos, model: Query<&PotentialModel>, settings: Res<PlotSettings>) {
+fn setup_ticks(
+    mut gizmos: Gizmos,
+    settings: Res<HarmonicOscillatorPlotSettings>,
+    model: Query<&PotentialModel>,
+) {
     for m in model.iter() {
-        if m.0 == PotentialModelInput::HarmonicOscillator {
-            let domain_points = generate_points(
-                settings.domain_range_start,
-                settings.domain_range_end,
-                settings.ticks_step,
-                |x| x,
-            );
-            let line_height = 0.1;
-            let half_line_height = line_height / 2.0;
-            for point in domain_points {
-                let x = point.x * settings.screen_scale_x;
-                gizmos.line_2d(
-                    Vec2 {
-                        x,
-                        y: -half_line_height,
-                    },
-                    Vec2 {
-                        x,
-                        y: half_line_height,
-                    },
-                    GREEN,
-                );
-            }
+        if m.0 == PotentialModelInput::InfiniteWell {
+            setup_plot_ticks(&mut gizmos, settings.0.clone())
         }
     }
 }
