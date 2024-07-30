@@ -16,29 +16,36 @@ const H_BAR: f32 = 1.054571817e-34;
 pub struct HarmonicOscillatorPlotSettings(pub PlotSettings);
 
 pub fn add_plot(app: &mut App) {
-    app.add_systems(Update, (setup_pdf, setup_psi, setup_ticks))
-        .insert_resource(HarmonicOscillatorPlotSettings(PlotSettings {
-            domain_range_start: -2e-10,
-            domain_range_end: 2e-10,
-            screen_scale_x: 1e10,
-            screen_scale_y_psi: 1.0 / 72414.0,
-            screen_scale_y_pdf: 1.0 / 8000000000.0,
-            ticks_step: 1e-10,
-        }));
+    app.add_systems(
+        Update,
+        (setup_pdf, setup_psi, setup_ticks).run_if(is_model_selected),
+    )
+    .insert_resource(HarmonicOscillatorPlotSettings(PlotSettings {
+        domain_range_start: -2e-10,
+        domain_range_end: 2e-10,
+        screen_scale_x: 1e10,
+        screen_scale_y_psi: 1.0 / 72414.0,
+        screen_scale_y_pdf: 1.0 / 8000000000.0,
+        ticks_step: 1e-10,
+    }));
+}
+
+fn is_model_selected(mode: Res<PotentialModelInput>) -> bool {
+    match *mode {
+        PotentialModelInput::HarmonicOscillator => true,
+        _ => false,
+    }
 }
 
 fn setup_psi(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurveWave>)>,
-    model: Res<PotentialModelInput>,
     settings: Res<HarmonicOscillatorPlotSettings>,
 ) {
-    if *model == PotentialModelInput::HarmonicOscillator {
-        for e in energy_level_query.iter() {
-            let points = generate_psi_points(|x| psi(x, e, 9e-31, 10e16_f32), &settings.0.clone());
-            setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
-        }
+    for e in energy_level_query.iter() {
+        let points = generate_psi_points(|x| psi(x, e, 9e-31, 10e16_f32), &settings.0.clone());
+        setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
     }
 }
 
@@ -46,14 +53,11 @@ fn setup_pdf(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurvePDF>)>,
-    model: Res<PotentialModelInput>,
     settings: Res<HarmonicOscillatorPlotSettings>,
 ) {
-    if *model == PotentialModelInput::HarmonicOscillator {
-        for e in energy_level_query.iter() {
-            let points = generate_pdf_points(|x| pdf(x, e, 9e-31, 10e16_f32), &settings.0.clone());
-            setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
-        }
+    for e in energy_level_query.iter() {
+        let points = generate_pdf_points(|x| pdf(x, e, 9e-31, 10e16_f32), &settings.0.clone());
+        setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
     }
 }
 
@@ -156,14 +160,8 @@ fn hermite_polynomial(level: &EnergyLevel) -> impl Fn(f32) -> f32 {
     }
 }
 
-fn setup_ticks(
-    mut gizmos: Gizmos,
-    settings: Res<HarmonicOscillatorPlotSettings>,
-    model: Res<PotentialModelInput>,
-) {
-    if *model == PotentialModelInput::InfiniteWell {
-        setup_plot_ticks(&mut gizmos, settings.0.clone())
-    }
+fn setup_ticks(mut gizmos: Gizmos, settings: Res<HarmonicOscillatorPlotSettings>) {
+    setup_plot_ticks(&mut gizmos, settings.0.clone())
 }
 
 #[cfg(test)]

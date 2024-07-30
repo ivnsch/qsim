@@ -24,22 +24,27 @@ pub fn add_plot(app: &mut App) {
             setup_psi,
             setup_ticks,
             setup_vertical_dashed_line,
-        ),
+        )
+            .run_if(is_model_selected),
     )
     .insert_resource(InfiniteWellPlotSettings(PlotSettings::default()));
+}
+
+fn is_model_selected(mode: Res<PotentialModelInput>) -> bool {
+    match *mode {
+        PotentialModelInput::InfiniteWell => true,
+        _ => false,
+    }
 }
 
 fn setup_psi(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurveWave>)>,
-    model: Res<PotentialModelInput>,
 ) {
-    if *model == PotentialModelInput::InfiniteWell {
-        for e in energy_level_query.iter() {
-            let points = generate_scaled_points(|x| psi(x, e));
-            setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
-        }
+    for e in energy_level_query.iter() {
+        let points = generate_scaled_points(|x| psi(x, e));
+        setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
     }
 }
 
@@ -47,13 +52,10 @@ fn setup_pdf(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
     curve_query: Query<Entity, (With<Curve>, With<CurvePDF>)>,
-    model: Res<PotentialModelInput>,
 ) {
-    if *model == PotentialModelInput::InfiniteWell {
-        for e in energy_level_query.iter() {
-            let points = generate_scaled_points(|x| pdf(x, e));
-            setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
-        }
+    for e in energy_level_query.iter() {
+        let points = generate_scaled_points(|x| pdf(x, e));
+        setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
     }
 }
 
@@ -98,12 +100,6 @@ fn setup_vertical_dashed_line(mut gizmos: Gizmos, model: Res<PotentialModelInput
     }
 }
 
-fn setup_ticks(
-    mut gizmos: Gizmos,
-    settings: Res<InfiniteWellPlotSettings>,
-    model: Res<PotentialModelInput>,
-) {
-    if *model == PotentialModelInput::InfiniteWell {
-        setup_plot_ticks(&mut gizmos, settings.0.clone())
-    }
+fn setup_ticks(mut gizmos: Gizmos, settings: Res<InfiniteWellPlotSettings>) {
+    setup_plot_ticks(&mut gizmos, settings.0.clone())
 }
