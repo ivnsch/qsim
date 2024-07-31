@@ -34,7 +34,7 @@ impl Default for PlotSettings {
             screen_scale_x: 1.0,
             screen_scale_y_psi: 1.0,
             screen_scale_y_pdf: 1.0,
-            ticks_step: 30.0,
+            ticks_step: 1.0,
         }
     }
 }
