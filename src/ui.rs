@@ -291,7 +291,7 @@ pub fn add_square_button<T>(
     commands.entity(root_id).push_children(&[button]);
 }
 
-/// processes the gui events
+/// processes the ui events
 // TODO error handling (show on ui)
 #[allow(clippy::too_many_arguments)]
 pub fn listen_ui_inputs(
@@ -396,7 +396,7 @@ fn plus_minus_button_handler(
     }
 }
 
-/// processes the gui events
+/// processes the ui events
 // TODO error handling (show on ui)
 #[allow(clippy::too_many_arguments)]
 pub fn listen_energy_level_ui_inputs(
@@ -527,7 +527,7 @@ fn potential_model_button_handler(
     }
 }
 
-/// processes the gui events
+/// processes the ui events
 #[allow(clippy::too_many_arguments)]
 pub fn listen_potential_model_ui_inputs(
     mut events: EventReader<PotentialModelInputEvent>,
