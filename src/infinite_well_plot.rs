@@ -44,7 +44,7 @@ fn setup_psi(
 ) {
     for e in energy_level_query.iter() {
         let points = generate_scaled_points(|x| psi(x, e));
-        setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
+        setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
     }
 }
 
@@ -55,7 +55,7 @@ fn setup_pdf(
 ) {
     for e in energy_level_query.iter() {
         let points = generate_scaled_points(|x| pdf(x, e));
-        setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
+        setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
     }
 }
 
