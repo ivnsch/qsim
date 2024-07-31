@@ -1,11 +1,14 @@
 use bevy::{color::palettes::css::GREEN, prelude::*};
 
-use crate::ui::{
-    despawn_all_entities_tu, harmonic_oscillator_button_handler,
-    infinite_well_model_button_handler, listen_energy_level_ui_inputs,
-    listen_potential_model_ui_inputs, listen_ui_inputs, minus_button_handler, plus_button_handler,
-    setup_ui, update_energy_level_label, PlusMinusInput, PlusMinusInputEvent,
-    PotentialModelInputEvent, UiInputsEvent,
+use crate::{
+    camera_controller::{CameraController, CameraControllerPlugin},
+    ui::{
+        despawn_all_entities_tu, harmonic_oscillator_button_handler,
+        infinite_well_model_button_handler, listen_energy_level_ui_inputs,
+        listen_potential_model_ui_inputs, listen_ui_inputs, minus_button_handler,
+        plus_button_handler, setup_ui, update_energy_level_label, PlusMinusInput,
+        PlusMinusInputEvent, PotentialModelInputEvent, UiInputsEvent,
+    },
 };
 
 #[derive(Resource, Clone)]
@@ -48,6 +51,7 @@ pub fn add_plot(app: &mut App) {
     app.add_event::<UiInputsEvent>()
         .add_event::<PlusMinusInputEvent>()
         .add_event::<PotentialModelInputEvent>()
+        .add_plugins(CameraControllerPlugin)
         .insert_resource(PlusMinusInput::Plus)
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, (setup_camera, setup_light))
@@ -94,17 +98,20 @@ pub fn setup_curve<T>(
 }
 
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle {
-        projection: OrthographicProjection {
-            scale: 0.01,
+    commands.spawn((
+        Camera2dBundle {
+            projection: OrthographicProjection {
+                scale: 0.01,
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::new(0.4, 0.5, 0.0),
+                ..default()
+            },
             ..default()
         },
-        transform: Transform {
-            translation: Vec3::new(0.4, 0.5, 0.0),
-            ..default()
-        },
-        ..default()
-    });
+        CameraController::default(),
+    ));
 }
 
 fn setup_light(mut commands: Commands) {

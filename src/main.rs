@@ -1,3 +1,4 @@
+mod camera_controller;
 mod harmonic_oscillator_plot;
 mod infinite_well_plot;
 mod plot;
