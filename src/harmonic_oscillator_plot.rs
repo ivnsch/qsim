@@ -1,6 +1,7 @@
 use crate::{
     plot::{
         generate_points, setup_curve, setup_plot_ticks, Curve, CurvePDF, CurveWave, PlotSettings,
+        TickSettings,
     },
     ui::{EnergyLevel, PotentialModelInput},
 };
@@ -26,7 +27,7 @@ pub fn add_plot(app: &mut App) {
         screen_scale_x: 1e10,
         screen_scale_y_psi: 1.0 / 72414.0,
         screen_scale_y_pdf: 1.0 / 8000000000.0,
-        ticks_step: 1e-10,
+        ticks: TickSettings { step: 1e-10 },
     }));
 }
 

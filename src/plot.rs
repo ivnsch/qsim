@@ -23,7 +23,12 @@ pub struct PlotSettings {
     // exact height unimportant
     pub screen_scale_y_pdf: f32,
 
-    pub ticks_step: f32,
+    pub ticks: TickSettings,
+}
+
+#[derive(Resource, Clone)]
+pub struct TickSettings {
+    pub step: f32,
 }
 
 impl Default for PlotSettings {
@@ -34,7 +39,7 @@ impl Default for PlotSettings {
             screen_scale_x: 1.0,
             screen_scale_y_psi: 1.0,
             screen_scale_y_pdf: 1.0,
-            ticks_step: 1.0,
+            ticks: TickSettings { step: 1.0 },
         }
     }
 }
@@ -229,7 +234,7 @@ pub fn setup_plot_ticks(gizmos: &mut Gizmos, settings: PlotSettings) {
     let domain_points = generate_points(
         settings.domain_range_start,
         settings.domain_range_end,
-        settings.ticks_step,
+        settings.ticks.step,
         |x| x,
     );
     let line_height = 0.1;
