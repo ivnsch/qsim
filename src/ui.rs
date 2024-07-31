@@ -1,7 +1,10 @@
 use std::cmp;
 
 use bevy::{
-    color::palettes::css::{BLACK, GREEN, WHITE},
+    color::palettes::{
+        css::{BLACK, GREEN, WHITE},
+        tailwind::GRAY_500,
+    },
     ecs::query::QueryData,
     prelude::*,
 };
@@ -75,6 +78,8 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 
     commands.insert_resource(PotentialModelInput::InfiniteWell);
+
+    add_legend_box(&mut commands, &font);
 }
 
 /// returns the label (entity) with the numeric value
@@ -193,6 +198,62 @@ pub fn generate_button_label(font: &Handle<Font>, label: &str) -> TextBundle {
         ),
         ..default()
     }
+}
+
+pub fn generate_legend(font: &Handle<Font>, label: &str, color: impl Into<Color>) -> impl Bundle {
+    TextBundle {
+        style: Style {
+            position_type: PositionType::Relative,
+            left: Val::Px(0.0),
+            width: Val::Auto,
+            height: Val::Auto,
+            ..default()
+        },
+        text: Text::from_section(
+            label.to_string(),
+            TextStyle {
+                font: font.clone(),
+                font_size: 14.0,
+                color: color.into(),
+            },
+        ),
+        ..default()
+    }
+}
+
+pub fn add_legend_box(commands: &mut Commands, font: &Handle<Font>) -> Entity {
+    let row = NodeBundle {
+        style: Style {
+            position_type: PositionType::Absolute,
+            flex_direction: FlexDirection::Column,
+            left: Val::Px(10.0),
+            bottom: Val::Px(0.0),
+            width: Val::Auto,
+            height: Val::Auto,
+            ..default()
+        },
+        ..default()
+    };
+
+    let row_id = commands.spawn(row).id();
+
+    add_legend(commands, row_id, &font, "Ψ(x)", WHITE);
+    add_legend(commands, row_id, &font, "|Ψ(x)|^2", GRAY_500);
+
+    row_id
+}
+
+pub fn add_legend(
+    commands: &mut Commands,
+    root_id: Entity,
+    font: &Handle<Font>,
+    label: &str,
+    color: impl Into<Color>,
+) -> Entity {
+    let bundle = generate_legend(font, label, color);
+    let entity = commands.spawn(bundle).id();
+    commands.entity(root_id).push_children(&[entity]);
+    entity
 }
 
 pub fn add_button<T>(
