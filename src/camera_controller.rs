@@ -103,11 +103,18 @@ fn run_camera_controller(
     key_input: Res<ButtonInput<KeyCode>>,
     mut toggle_cursor_grab: Local<bool>,
     mut mouse_cursor_grab: Local<bool>,
-    mut query: Query<(&mut Transform, &mut CameraController), With<Camera>>,
+    mut query: Query<
+        (
+            &mut Transform,
+            &mut CameraController,
+            &mut OrthographicProjection,
+        ),
+        With<Camera>,
+    >,
 ) {
     let dt = time.delta_seconds();
 
-    if let Ok((mut transform, mut controller)) = query.get_single_mut() {
+    if let Ok((mut transform, mut controller, mut projection)) = query.get_single_mut() {
         if !controller.initialized {
             let (yaw, pitch, _roll) = transform.rotation.to_euler(EulerRot::YXZ);
             controller.yaw = yaw;
@@ -123,10 +130,10 @@ fn run_camera_controller(
         // Handle key input
         let mut axis_input = Vec3::ZERO;
         if key_input.pressed(controller.key_forward) {
-            axis_input.z += 1.0;
+            projection.scale -= 0.0001;
         }
         if key_input.pressed(controller.key_back) {
-            axis_input.z -= 1.0;
+            projection.scale += 0.0001;
         }
         if key_input.pressed(controller.key_right) {
             axis_input.x += 1.0;
