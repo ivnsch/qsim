@@ -75,16 +75,15 @@ fn setup_pdf(
 fn psi(x: f32, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
     let normalization_constant = calculate_normalization_constant(level, mass, ang_freq);
 
-    let mass_value = mass.get::<kilogram>();
-    let ang_freg_value = ang_freq.get::<hertz>();
+    let sub_term = (mass * ang_freq) / H_BAR;
+    let sub_term_value = sub_term.value;
 
-    let e_exp = -(mass_value * ang_freg_value * x.powi(2)) / (2.0 * H_BAR);
+    let e_exp = -sub_term_value * x.powi(2) / 2.0;
     let e_term = E.powf(e_exp);
 
     let pol = hermite_polynomial(level);
 
-    let mass_value = mass.get::<kilogram>();
-    let pol_param = ((mass_value * ang_freg_value) / H_BAR).sqrt() * x;
+    let pol_param = sub_term_value.sqrt() * x;
 
     let res = normalization_constant * e_term * pol(pol_param);
 
@@ -106,10 +105,10 @@ fn calculate_normalization_constant(level: &EnergyLevel, mass: Mass, ang_freq: F
 
     let term1 = 1.0 / (two_float.powi(level_int) * level_fact as f32).sqrt();
 
-    let mass_value = mass.get::<kilogram>();
-    let ang_freq_value = ang_freq.get::<hertz>();
+    let sub_term = (mass * ang_freq) / H_BAR;
+    let sub_term_value = sub_term.value;
 
-    let term2 = ((mass_value * ang_freq_value) / (PI * H_BAR)).powf(1.0 / 4.0);
+    let term2 = (sub_term_value / PI).powf(1.0 / 4.0);
 
     term1 * term2
 }
