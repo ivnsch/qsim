@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 bevy = { version = "0.14.0" }
 approx = "0.5.1"
+uom = "0.36.0"
