@@ -12,6 +12,7 @@ use bevy::{
     prelude::*,
 };
 use std::f32::consts::PI;
+use uom::si::{f32::Length, length::meter};
 
 #[derive(Resource)]
 pub struct InfiniteWellPlotSettings(PlotSettings);
@@ -61,21 +62,22 @@ fn setup_pdf(
 
 fn generate_scaled_points<F>(function: F) -> Vec<Vec2>
 where
-    F: Fn(f32) -> f32,
+    F: Fn(Length) -> f32,
 {
-    let domain_points = generate_points(-10.0, 10.0, 0.02, function);
+    let domain_points = generate_points(-10.0, 10.0, 0.02, |x| function(Length::new::<meter>(x)));
     // for now no scaling needed, domain parameters happen to match screen dimensions
     domain_points
 }
 
 /// Ψ_n(x)
-fn psi(x: f32, level: &EnergyLevel) -> f32 {
-    let l: f32 = 2.0;
-    (2.0 / l).sqrt() * ((level.0 as f32 * PI * x) / l).sin()
+fn psi(x: Length, level: &EnergyLevel) -> f32 {
+    let l = Length::new::<meter>(2.0);
+    let l_value = l.value;
+    (2.0 / l_value).sqrt() * ((level.0 as f32 * PI * x.value) / l_value).sin()
 }
 
 /// PDF for Ψ_n(x)
-fn pdf(x: f32, level: &EnergyLevel) -> f32 {
+fn pdf(x: Length, level: &EnergyLevel) -> f32 {
     let psi = psi(x, level);
     psi.powi(2)
 }

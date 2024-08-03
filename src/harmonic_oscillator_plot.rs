@@ -11,8 +11,9 @@ use bevy::{
 };
 use std::f32::consts::{E, PI};
 use uom::si::{
-    f32::{Frequency, Mass},
+    f32::{Frequency, Length, Mass},
     frequency::hertz,
+    length::meter,
     mass::kilogram,
 };
 
@@ -72,18 +73,19 @@ fn setup_pdf(
 }
 
 /// solutions Ψ_n(x), see https://en.wikipedia.org/wiki/Quantum_harmonic_oscillator#Hamiltonian_and_energy_eigenstates
-fn psi(x: f32, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
+fn psi(x: Length, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
     let normalization_constant = calculate_normalization_constant(level, mass, ang_freq);
 
     let sub_term = (mass * ang_freq) / H_BAR;
     let sub_term_value = sub_term.value;
+    let x_value = x.value;
 
-    let e_exp = -sub_term_value * x.powi(2) / 2.0;
+    let e_exp = -sub_term_value * x_value.powi(2) / 2.0;
     let e_term = E.powf(e_exp);
 
     let pol = hermite_polynomial(level);
 
-    let pol_param = sub_term_value.sqrt() * x;
+    let pol_param = sub_term_value.sqrt() * x_value;
 
     let res = normalization_constant * e_term * pol(pol_param);
 
@@ -91,7 +93,7 @@ fn psi(x: f32, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
 }
 
 /// PDF for Ψ_n(x)
-fn pdf(x: f32, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
+fn pdf(x: Length, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
     let psi = psi(x, level, mass, ang_freq);
     psi.powi(2)
 }
@@ -115,7 +117,8 @@ fn calculate_normalization_constant(level: &EnergyLevel, mass: Mass, ang_freq: F
 
 fn generate_psi_points<F>(function: F, settings: &PlotSettings) -> Vec<Vec2>
 where
-    F: Fn(f32) -> f32,
+    // for now assuming the dimension to be spatial
+    F: Fn(Length) -> f32,
 {
     // scaled down y by ~max value so it fits in graph
     // TODO generic mapping to screen coords
@@ -124,7 +127,8 @@ where
 
 fn generate_pdf_points<F>(function: F, settings: &PlotSettings) -> Vec<Vec2>
 where
-    F: Fn(f32) -> f32,
+    // for now assuming the dimension to be spatial
+    F: Fn(Length) -> f32,
 {
     // scaled dowwn y by eye to plot together with psi
     // exact height unimportant
@@ -133,13 +137,14 @@ where
 
 fn generate_psi_or_pdf_points<F>(function: F, scale_y: f32, settings: &PlotSettings) -> Vec<Vec2>
 where
-    F: Fn(f32) -> f32,
+    // for now assuming the dimension to be spatial
+    F: Fn(Length) -> f32,
 {
     let domain_points = generate_points(
         settings.domain_range_start,
         settings.domain_range_end,
         1e-12,
-        function,
+        |x| function(Length::new::<meter>(x)),
     );
     let scaled_points: Vec<Vec2> = domain_points
         .into_iter()
@@ -189,8 +194,9 @@ mod test {
     use approx::assert_relative_eq;
     use bevy::math::Vec2;
     use uom::si::{
-        f32::{Frequency, Mass},
+        f32::{Frequency, Length, Mass},
         frequency::hertz,
+        length::meter,
         mass::{gram, kilogram},
     };
 
@@ -216,7 +222,7 @@ mod test {
         let ang_freq = Frequency::new::<hertz>(1.0);
 
         let level = EnergyLevel(0);
-        let x = 0.0;
+        let x = Length::new::<meter>(0.0);
 
         let n = calculate_normalization_constant(&level, mass, ang_freq);
 
@@ -235,7 +241,7 @@ mod test {
         let ang_freq = Frequency::new::<hertz>(1.0);
 
         let level = EnergyLevel(0);
-        let x = 2.0;
+        let x = Length::new::<meter>(2.0);
 
         let n = calculate_normalization_constant(&level, mass, ang_freq);
 
@@ -253,7 +259,7 @@ mod test {
         let ang_freq = Frequency::new::<hertz>(1e16_f32);
 
         let level = EnergyLevel(0);
-        let x = 0.0;
+        let x = Length::new::<meter>(0.0);
 
         let n = calculate_normalization_constant(&level, mass, ang_freq);
 
@@ -271,7 +277,7 @@ mod test {
         let ang_freq = Frequency::new::<hertz>(1e16_f32);
 
         let level = EnergyLevel(0);
-        let x = -1e-10;
+        let x = Length::new::<meter>(-1e-10);
 
         let n = calculate_normalization_constant(&level, mass, ang_freq);
 
