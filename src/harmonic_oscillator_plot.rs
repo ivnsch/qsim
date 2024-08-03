@@ -191,7 +191,7 @@ mod test {
     use uom::si::{
         f32::{Frequency, Mass},
         frequency::hertz,
-        mass::kilogram,
+        mass::{gram, kilogram},
     };
 
     use crate::{harmonic_oscillator_plot::pdf, plot::generate_points, ui::EnergyLevel};
@@ -281,5 +281,20 @@ mod test {
         assert_eq!(72414.09141, n);
         assert_relative_eq!(47015.25181, psi);
         assert_relative_eq!(2.2104339e9, pd, epsilon = 0.00000000000001);
+    }
+
+    /// just double checking `value` property
+    /// it uses [SI base units](https://en.wikipedia.org/wiki/SI_base_unit) (hardcoded)
+    #[test]
+    fn uom_clarification() {
+        let mass1 = Mass::new::<kilogram>(1.0);
+        assert_relative_eq!(1.0, mass1.value); // base unit (kg)
+        assert_relative_eq!(1.0, mass1.get::<kilogram>());
+        assert_relative_eq!(1000.0, mass1.get::<gram>());
+
+        let mass2 = Mass::new::<gram>(1.0);
+        assert_relative_eq!(0.001, mass2.value); // base unit (kg)
+        assert_relative_eq!(0.001, mass2.get::<kilogram>());
+        assert_relative_eq!(1.0, mass2.get::<gram>());
     }
 }
