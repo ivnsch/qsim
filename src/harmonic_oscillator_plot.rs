@@ -10,6 +10,12 @@ use bevy::{
     prelude::*,
 };
 use std::f32::consts::{E, PI};
+use uom::si::{
+    f32::{Frequency, Length, Mass},
+    frequency::hertz,
+    length::meter,
+    mass::kilogram,
+};
 
 const H_BAR: f32 = 1.054571817e-34;
 
@@ -44,8 +50,10 @@ fn setup_psi(
     curve_query: Query<Entity, (With<Curve>, With<CurveWave>)>,
     settings: Res<HarmonicOscillatorPlotSettings>,
 ) {
+    let mass = Mass::new::<kilogram>(9e-31);
+    let ang_freq = Frequency::new::<hertz>(10e16_f32);
     for e in energy_level_query.iter() {
-        let points = generate_psi_points(|x| psi(x, e, 9e-31, 10e16_f32), &settings.0.clone());
+        let points = generate_psi_points(|x| psi(x, e, mass, ang_freq), &settings.0.clone());
         setup_curve(&mut commands, WHITE, e.0, &curve_query, points);
     }
 }
@@ -56,19 +64,28 @@ fn setup_pdf(
     curve_query: Query<Entity, (With<Curve>, With<CurvePDF>)>,
     settings: Res<HarmonicOscillatorPlotSettings>,
 ) {
+    let mass = Mass::new::<kilogram>(9e-31);
+    let ang_freq = Frequency::new::<hertz>(10e16_f32);
     for e in energy_level_query.iter() {
-        let points = generate_pdf_points(|x| pdf(x, e, 9e-31, 10e16_f32), &settings.0.clone());
+        let points = generate_pdf_points(|x| pdf(x, e, mass, ang_freq), &settings.0.clone());
         setup_curve(&mut commands, GRAY_500, e.0, &curve_query, points);
     }
 }
 
 /// solutions Ψ_n(x), see https://en.wikipedia.org/wiki/Quantum_harmonic_oscillator#Hamiltonian_and_energy_eigenstates
-fn psi(x: f32, level: &EnergyLevel, mass: f32, ang_freq: f32) -> f32 {
+fn psi(x: Length, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
     let normalization_constant = calculate_normalization_constant(level, mass, ang_freq);
-    let e_exp = -(mass * ang_freq * x.powi(2)) / (2.0 * H_BAR);
+
+    let sub_term = (mass * ang_freq) / H_BAR;
+    let sub_term_value = sub_term.value;
+    let x_value = x.value;
+
+    let e_exp = -sub_term_value * x_value.powi(2) / 2.0;
     let e_term = E.powf(e_exp);
+
     let pol = hermite_polynomial(level);
-    let pol_param = ((mass * ang_freq) / H_BAR).sqrt() * x;
+
+    let pol_param = sub_term_value.sqrt() * x_value;
 
     let res = normalization_constant * e_term * pol(pol_param);
 
@@ -76,12 +93,12 @@ fn psi(x: f32, level: &EnergyLevel, mass: f32, ang_freq: f32) -> f32 {
 }
 
 /// PDF for Ψ_n(x)
-fn pdf(x: f32, level: &EnergyLevel, mass: f32, ang_freq: f32) -> f32 {
+fn pdf(x: Length, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
     let psi = psi(x, level, mass, ang_freq);
     psi.powi(2)
 }
 
-fn calculate_normalization_constant(level: &EnergyLevel, mass: f32, ang_freq: f32) -> f32 {
+fn calculate_normalization_constant(level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
     let two_float = 2.0_f32;
     let level_int = level.0 as i32;
     let level_uint = level.0 as u32;
@@ -89,14 +106,19 @@ fn calculate_normalization_constant(level: &EnergyLevel, mass: f32, ang_freq: f3
     let level_fact: u32 = (1..=level_uint).product();
 
     let term1 = 1.0 / (two_float.powi(level_int) * level_fact as f32).sqrt();
-    let term2 = ((mass * ang_freq) / (PI * H_BAR)).powf(1.0 / 4.0);
+
+    let sub_term = (mass * ang_freq) / H_BAR;
+    let sub_term_value = sub_term.value;
+
+    let term2 = (sub_term_value / PI).powf(1.0 / 4.0);
 
     term1 * term2
 }
 
 fn generate_psi_points<F>(function: F, settings: &PlotSettings) -> Vec<Vec2>
 where
-    F: Fn(f32) -> f32,
+    // for now assuming the dimension to be spatial
+    F: Fn(Length) -> f32,
 {
     // scaled down y by ~max value so it fits in graph
     // TODO generic mapping to screen coords
@@ -105,7 +127,8 @@ where
 
 fn generate_pdf_points<F>(function: F, settings: &PlotSettings) -> Vec<Vec2>
 where
-    F: Fn(f32) -> f32,
+    // for now assuming the dimension to be spatial
+    F: Fn(Length) -> f32,
 {
     // scaled dowwn y by eye to plot together with psi
     // exact height unimportant
@@ -114,13 +137,14 @@ where
 
 fn generate_psi_or_pdf_points<F>(function: F, scale_y: f32, settings: &PlotSettings) -> Vec<Vec2>
 where
-    F: Fn(f32) -> f32,
+    // for now assuming the dimension to be spatial
+    F: Fn(Length) -> f32,
 {
     let domain_points = generate_points(
         settings.domain_range_start,
         settings.domain_range_end,
         1e-12,
-        function,
+        |x| function(Length::new::<meter>(x)),
     );
     let scaled_points: Vec<Vec2> = domain_points
         .into_iter()
@@ -169,6 +193,12 @@ fn setup_ticks(mut gizmos: Gizmos, settings: Res<HarmonicOscillatorPlotSettings>
 mod test {
     use approx::assert_relative_eq;
     use bevy::math::Vec2;
+    use uom::si::{
+        f32::{Frequency, Length, Mass},
+        frequency::hertz,
+        length::meter,
+        mass::{gram, kilogram},
+    };
 
     use crate::{harmonic_oscillator_plot::pdf, plot::generate_points, ui::EnergyLevel};
 
@@ -188,11 +218,11 @@ mod test {
 
     #[test]
     fn waves_for_e_0_x_0_are_correct() {
-        let mass = 1.0;
-        let ang_freq = 1.0;
+        let mass = Mass::new::<kilogram>(1.0);
+        let ang_freq = Frequency::new::<hertz>(1.0);
 
         let level = EnergyLevel(0);
-        let x = 0.0;
+        let x = Length::new::<meter>(0.0);
 
         let n = calculate_normalization_constant(&level, mass, ang_freq);
 
@@ -207,11 +237,11 @@ mod test {
 
     #[test]
     fn waves_for_e_0_x_2_are_correct() {
-        let mass = 1.0;
-        let ang_freq = 1.0;
+        let mass = Mass::new::<kilogram>(1.0);
+        let ang_freq = Frequency::new::<hertz>(1.0);
 
         let level = EnergyLevel(0);
-        let x = 2.0;
+        let x = Length::new::<meter>(2.0);
 
         let n = calculate_normalization_constant(&level, mass, ang_freq);
 
@@ -225,11 +255,11 @@ mod test {
 
     #[test]
     fn waves_for_e_0_x_0_realistic_pars_are_correct() {
-        let mass = 9.11e-31;
-        let ang_freq = 1e16_f32;
+        let mass = Mass::new::<kilogram>(9.11e-31);
+        let ang_freq = Frequency::new::<hertz>(1e16_f32);
 
         let level = EnergyLevel(0);
-        let x = 0.0;
+        let x = Length::new::<meter>(0.0);
 
         let n = calculate_normalization_constant(&level, mass, ang_freq);
 
@@ -243,11 +273,11 @@ mod test {
 
     #[test]
     fn waves_for_e_0_x_nonzero_realistic_pars_are_correct() {
-        let mass = 9.11e-31;
-        let ang_freq = 1e16_f32;
+        let mass = Mass::new::<kilogram>(9.11e-31);
+        let ang_freq = Frequency::new::<hertz>(1e16_f32);
 
         let level = EnergyLevel(0);
-        let x = -1e-10;
+        let x = Length::new::<meter>(-1e-10);
 
         let n = calculate_normalization_constant(&level, mass, ang_freq);
 
@@ -257,5 +287,20 @@ mod test {
         assert_eq!(72414.09141, n);
         assert_relative_eq!(47015.25181, psi);
         assert_relative_eq!(2.2104339e9, pd, epsilon = 0.00000000000001);
+    }
+
+    /// just double checking `value` property
+    /// it uses [SI base units](https://en.wikipedia.org/wiki/SI_base_unit) (hardcoded)
+    #[test]
+    fn uom_clarification() {
+        let mass1 = Mass::new::<kilogram>(1.0);
+        assert_relative_eq!(1.0, mass1.value); // base unit (kg)
+        assert_relative_eq!(1.0, mass1.get::<kilogram>());
+        assert_relative_eq!(1000.0, mass1.get::<gram>());
+
+        let mass2 = Mass::new::<gram>(1.0);
+        assert_relative_eq!(0.001, mass2.value); // base unit (kg)
+        assert_relative_eq!(0.001, mass2.get::<kilogram>());
+        assert_relative_eq!(1.0, mass2.get::<gram>());
     }
 }

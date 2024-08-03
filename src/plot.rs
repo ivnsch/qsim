@@ -210,6 +210,8 @@ fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     }
 }
 
+/// generates points (x, y) by evaluating function on an x
+/// within [range_start, range_end], with a given step size.
 pub fn generate_points<F>(range_start: f32, range_end: f32, step: f32, function: F) -> Vec<Vec2>
 where
     F: Fn(f32) -> f32,
