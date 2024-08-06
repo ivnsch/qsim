@@ -7,8 +7,6 @@ Plots for basic quantum models:
 
 Rendered with [bevy](https://bevyengine.org)
 
-Note: doesn't solve differential equations, uses directly the solutions.
-
 More models might be added.
 
 ![alt text](img/plot1.png)
