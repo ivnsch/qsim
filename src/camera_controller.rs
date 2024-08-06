@@ -94,6 +94,7 @@ Freecam Controls:
     }
 }
 
+/// manipulates relevant scene's transforms in response to panning and zooming inputs
 #[allow(clippy::too_many_arguments)]
 fn run_camera_controller(
     time: Res<Time>,
@@ -130,9 +131,11 @@ fn run_camera_controller(
         // Handle key input
         let mut axis_input = Vec3::ZERO;
         if key_input.pressed(controller.key_forward) {
+            // for orthographic projection, zooming works by scaling the projection (instead of z)
             projection.scale -= 0.0001;
         }
         if key_input.pressed(controller.key_back) {
+            // for orthographic projection, zooming works by scaling the projection (instead of z)
             projection.scale += 0.0001;
         }
         if key_input.pressed(controller.key_right) {

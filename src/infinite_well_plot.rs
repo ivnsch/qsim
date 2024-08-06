@@ -1,3 +1,6 @@
+/// basic infinite well plot
+/// it plots Ψ(x) and PDF(x) for a given energy level, selected via the UI
+/// we use the solved equations for Ψ and PDF
 use crate::{
     plot::{
         generate_points, setup_curve, setup_plot_ticks, Curve, CurvePDF, CurveWave, PlotSettings,
@@ -14,9 +17,12 @@ use bevy::{
 use std::f32::consts::PI;
 use uom::si::{f32::Length, length::meter};
 
+/// make settings specific to this plot type
+/// needed for bevy's resources specifics
 #[derive(Resource)]
 pub struct InfiniteWellPlotSettings(PlotSettings);
 
+/// adds this plot to the app
 pub fn add_plot(app: &mut App) {
     app.add_systems(
         Update,
@@ -31,6 +37,7 @@ pub fn add_plot(app: &mut App) {
     .insert_resource(InfiniteWellPlotSettings(PlotSettings::default()));
 }
 
+/// condition to add this plot
 fn is_model_selected(mode: Res<PotentialModelInput>) -> bool {
     match *mode {
         PotentialModelInput::InfiniteWell => true,
@@ -38,6 +45,7 @@ fn is_model_selected(mode: Res<PotentialModelInput>) -> bool {
     }
 }
 
+/// adds Ψ screen curve to bevy
 fn setup_psi(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
@@ -49,6 +57,7 @@ fn setup_psi(
     }
 }
 
+/// adds PDF screen curve to bevy
 fn setup_pdf(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
@@ -60,6 +69,7 @@ fn setup_pdf(
     }
 }
 
+/// generates Ψ screen points
 fn generate_scaled_points<F>(function: F) -> Vec<Vec2>
 where
     F: Fn(Length) -> f32,
@@ -82,10 +92,11 @@ fn pdf(x: Length, level: &EnergyLevel) -> f32 {
     psi.powi(2)
 }
 
+/// draws a vertical dashed line through the right boundary of the well
 fn setup_vertical_dashed_line(mut gizmos: Gizmos, model: Res<PotentialModelInput>) {
     if *model == PotentialModelInput::InfiniteWell {
+        // for now hardcoded (TODO pass as setting)
         let x = 2.0;
-        // for now hardcoded
         let mut y_start = -10_f32;
         while y_start < 10_f32 {
             gizmos.line_2d(

@@ -1,3 +1,6 @@
+/// basic quantum harmonic oscillator plot
+/// it plots Ψ(x) and PDF(x) for a given energy level, selected via the UI
+/// we use the solved equations for Ψ and PDF
 use crate::{
     plot::{
         generate_points, setup_curve, setup_plot_ticks, Curve, CurvePDF, CurveWave, PlotSettings,
@@ -19,9 +22,12 @@ use uom::si::{
 
 const H_BAR: f32 = 1.054571817e-34;
 
+/// make settings specific to this plot type
+/// needed for bevy's resources specifics
 #[derive(Resource)]
 pub struct HarmonicOscillatorPlotSettings(pub PlotSettings);
 
+/// adds this plot to the app
 pub fn add_plot(app: &mut App) {
     app.add_systems(
         Update,
@@ -37,6 +43,7 @@ pub fn add_plot(app: &mut App) {
     }));
 }
 
+/// condition to add this plot
 fn is_model_selected(mode: Res<PotentialModelInput>) -> bool {
     match *mode {
         PotentialModelInput::HarmonicOscillator => true,
@@ -44,6 +51,7 @@ fn is_model_selected(mode: Res<PotentialModelInput>) -> bool {
     }
 }
 
+/// adds Ψ screen curve to bevy
 fn setup_psi(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
@@ -58,6 +66,7 @@ fn setup_psi(
     }
 }
 
+/// adds PDF screen curve to bevy
 fn setup_pdf(
     mut commands: Commands,
     energy_level_query: Query<&EnergyLevel>,
@@ -72,7 +81,7 @@ fn setup_pdf(
     }
 }
 
-/// solutions Ψ_n(x), see https://en.wikipedia.org/wiki/Quantum_harmonic_oscillator#Hamiltonian_and_energy_eigenstates
+/// Ψ_n(x), see https://en.wikipedia.org/wiki/Quantum_harmonic_oscillator#Hamiltonian_and_energy_eigenstates
 fn psi(x: Length, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
     let normalization_constant = calculate_normalization_constant(level, mass, ang_freq);
 
@@ -98,6 +107,7 @@ fn pdf(x: Length, level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
     psi.powi(2)
 }
 
+/// step in Ψ calculation, for better readability
 fn calculate_normalization_constant(level: &EnergyLevel, mass: Mass, ang_freq: Frequency) -> f32 {
     let two_float = 2.0_f32;
     let level_int = level.0 as i32;
@@ -115,6 +125,7 @@ fn calculate_normalization_constant(level: &EnergyLevel, mass: Mass, ang_freq: F
     term1 * term2
 }
 
+/// generates Ψ screen points
 fn generate_psi_points<F>(function: F, settings: &PlotSettings) -> Vec<Vec2>
 where
     // for now assuming the dimension to be spatial
@@ -125,6 +136,7 @@ where
     generate_psi_or_pdf_points(function, settings.screen_scale_y_psi, settings)
 }
 
+/// generates Ψ pdf points
 fn generate_pdf_points<F>(function: F, settings: &PlotSettings) -> Vec<Vec2>
 where
     // for now assuming the dimension to be spatial
@@ -135,6 +147,7 @@ where
     generate_psi_or_pdf_points(function, settings.screen_scale_y_pdf, settings)
 }
 
+/// generates screen points
 fn generate_psi_or_pdf_points<F>(function: F, scale_y: f32, settings: &PlotSettings) -> Vec<Vec2>
 where
     // for now assuming the dimension to be spatial
@@ -154,6 +167,10 @@ where
     scaled_points
 }
 
+/// generates the hermite polynomial for a given energy level
+/// ideally it should be done dynamically (allowing for principally infinite levels),
+/// but not entirely trivial in rust (TODO)
+/// for now hardcoded the polynomials for the 10 first energy levels.
 fn hermite_polynomial(level: &EnergyLevel) -> impl Fn(f32) -> f32 {
     match level.0 {
         0 => |_| 1.0,
@@ -177,9 +194,6 @@ fn hermite_polynomial(level: &EnergyLevel) -> impl Fn(f32) -> f32 {
                 + 302400.0 * y.powi(2)
                 + 30240.0
         },
-        // generating these dynamically seems not trivial in rust (crate for symbolic nth derivative?)
-        // for this project, supporting 10 energy levels seems fine (UI will prevent selecting higher levels)
-        // think there's also a recursive variant but yeah 10 levels is fine for now
         // leniently using panic!, implementation detail, don't want to add noise downstream
         _ => panic!("TODO polynomials not supported for n > 10"),
     }

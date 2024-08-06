@@ -11,29 +11,41 @@ use crate::{
     },
 };
 
+// TODO refactor such that "plot" can be used for any (for now bezier curve) plot
+// i.e. move everything Ψ/PDF to a layer above
+
+/// general plot settings
 #[derive(Resource, Clone)]
 pub struct PlotSettings {
+    /// start of the axis domain's range
     pub domain_range_start: f32,
+    /// end of the axis domain's range
     pub domain_range_end: f32,
 
-    // screen axes scaling
-    // note final screen scale involves as well camera's transform
+    /// scale applied to domain coordinates to show on screen
+    /// note final scale involves as well camera's transform
+    /// ideally we should have direct screen settings instead (e.g. screen step) and derive scale internally
     pub screen_scale_x: f32,
+    ///////////////////////////////
+    /// TODO move these to domain specific settings
+    /// PlotSettings should have only a screen_scale_y (analogous to screen_scale_x) field
+    ///
     // scaled down y by ~max value so it fits in graph
-    // todo generic mapping to screen coords
     pub screen_scale_y_psi: f32,
     // scaled dowwn y by eye to plot together with psi
     // exact height unimportant
     pub screen_scale_y_pdf: f32,
-
+    ///////////////////////////////
     pub ticks: TickSettings,
 }
 
 #[derive(Resource, Clone)]
 pub struct TickSettings {
+    /// spacing between ticks (domain units)
     pub step: f32,
 }
 
+// consider removing this.. a domain default doesn't make much sense
 impl Default for PlotSettings {
     fn default() -> Self {
         Self {
@@ -73,6 +85,8 @@ pub fn add_plot(app: &mut App) {
         .add_systems(Startup, setup_ui);
 }
 
+/// spawns bundle with bezier curve points, corresponding to data points
+/// note that the bezier curve points are still in domain space
 pub fn setup_curve<T>(
     commands: &mut Commands,
     color: impl Into<Color>,
@@ -121,6 +135,8 @@ fn setup_light(mut commands: Commands) {
     });
 }
 
+/// generates bezier curve points for data points
+/// basically inserts 2 control points between each consecutive point pair
 // https://github.com/ivnsch/SwiftCharts/blob/c354c1945bb35a1f01b665b22474f6db28cba4a2/SwiftCharts/Views/CubicLinePathGenerator
 fn generate_path(points: &[Vec2], tension1: f32, tension2: f32) -> Vec<[Vec2; 4]> {
     let mut path = vec![];
@@ -189,23 +205,30 @@ fn generate_path(points: &[Vec2], tension1: f32, tension2: f32) -> Vec<[Vec2; 4]
     path
 }
 
+/// representation of domain curve
 #[derive(Component)]
 pub struct Curve {
+    /// some identifier for debugging
+    /// uniqueness needed only if used
     #[allow(dead_code)]
-    id: u32, // debug - just to tell it apart from other curves in logs
+    id: u32,
+    /// data points (domain)
     points: CubicCurve<Vec2>,
+    /// color with which the curve will be displayed
     color: Color,
 }
 
+/// bevy bundle marker for Ψ curve
 #[derive(Component)]
 pub struct CurveWave;
 
+/// bevy bundle marker for PDF curve
 #[derive(Component)]
 pub struct CurvePDF;
 
+/// draws the curve generated in setup_curve on the screen
 fn draw_curve(mut query: Query<&Curve>, mut gizmos: Gizmos) {
     for cubic_curve in &mut query {
-        // Draw the curve
         gizmos.linestrip_2d(cubic_curve.points.iter_positions(1000), cubic_curve.color);
     }
 }
@@ -230,6 +253,7 @@ where
     points
 }
 
+/// generates axis lines
 fn setup_axes(mut gizmos: Gizmos) {
     let size = 300.0;
     let zero = 0.0;
@@ -239,6 +263,7 @@ fn setup_axes(mut gizmos: Gizmos) {
     gizmos.line_2d(Vec2 { x: zero, y: -size }, Vec2 { x: zero, y: size }, GREEN);
 }
 
+/// generates axis ticks
 pub fn setup_plot_ticks(gizmos: &mut Gizmos, settings: PlotSettings) {
     let domain_points = generate_points(
         settings.domain_range_start,
