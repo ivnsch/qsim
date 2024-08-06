@@ -81,6 +81,8 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PotentialModelInput::InfiniteWell);
 
     add_legend_box(&mut commands, &font);
+
+    add_control_info_labels(commands, &font);
 }
 
 /// adds component to set energy level
@@ -648,5 +650,38 @@ pub fn listen_potential_model_ui_inputs(
 ) {
     for input in events.read() {
         *model = input.model;
+    }
+}
+
+/// labels showing panning and zooming keys
+fn add_control_info_labels(mut commands: Commands, font: &Handle<Font>) {
+    // TODO wrapper component and relative position
+    commands.spawn(generate_control_info_label(font, "move right: a", 0.0));
+    commands.spawn(generate_control_info_label(font, "move left: d", 20.0));
+    commands.spawn(generate_control_info_label(font, "move up: q", 40.0));
+    commands.spawn(generate_control_info_label(font, "move down: e", 60.0));
+    commands.spawn(generate_control_info_label(font, "zoom in: w", 80.0));
+    commands.spawn(generate_control_info_label(font, "zoom out: s", 100.0));
+}
+
+fn generate_control_info_label(font: &Handle<Font>, label: &str, top: f32) -> TextBundle {
+    TextBundle {
+        style: Style {
+            position_type: PositionType::Relative,
+            top: Val::Px(top),
+            left: Val::Px(10.0),
+            width: Val::Auto,
+            height: Val::Auto,
+            ..default()
+        },
+        text: Text::from_section(
+            label.to_string(),
+            TextStyle {
+                font: font.clone(),
+                font_size: 14.0,
+                color: Color::WHITE,
+            },
+        ),
+        ..default()
     }
 }
